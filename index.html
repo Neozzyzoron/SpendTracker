@@ -10,27 +10,27 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
-  --bg:          #0F0F0D;
-  --bg2:         #161614;
-  --surface:     #1C1C19;
-  --surface2:    #242420;
-  --border:      #2E2E29;
-  --border2:     #3A3A34;
-  --text:        #E8E6DE;
-  --text2:       #8A8880;
-  --text3:       #4A4A46;
-  --accent:      #C8F060;
-  --accent-dim:  #1E2A0A;
-  --accent-mid:  #8AB840;
-  --red:         #E8614A;
-  --red-dim:     #2A120E;
-  --blue:        #4A90D9;
-  --blue-dim:    #0D1E2E;
-  --purple:      #9B6FD4;
-  --purple-dim:  #1A0F2A;
+  --bg:          #F7F6F2;
+  --bg2:         #FFFFFF;
+  --surface:     #FFFFFF;
+  --surface2:    #F0EFE9;
+  --border:      #E2E0D8;
+  --border2:     #C8C6BE;
+  --text:        #1A1916;
+  --text2:       #6B6860;
+  --text3:       #A8A69E;
+  --accent:      #2D5A3D;
+  --accent-dim:  #EAF1EC;
+  --accent-mid:  #4A8A5A;
+  --red:         #C8553D;
+  --red-dim:     #FAEAE7;
+  --blue:        #3D5A8A;
+  --blue-dim:    #EAF0F8;
+  --purple:      #7A5A8A;
+  --purple-dim:  #F0EAF8;
   --radius:      10px;
   --radius-sm:   6px;
-  --shadow:      0 2px 12px rgba(0,0,0,0.4);
+  --shadow:      0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -223,7 +223,7 @@ body {
 
 /* ── MODAL ───────────────────────────────── */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
   backdrop-filter: blur(6px); z-index: 1000;
   display: flex; align-items: center; justify-content: center;
   opacity: 0; pointer-events: none; transition: opacity 0.18s;
@@ -1102,8 +1102,8 @@ function updateUserUI() {
   const el = document.getElementById('sidebarAvatar');
   if (el) {
     el.textContent = name[0].toUpperCase();
-    el.style.background = cfg.currentUser === 0 ? 'var(--accent)' : 'var(--blue)';
-    el.style.color = cfg.currentUser === 0 ? 'var(--bg)' : '#fff';
+    el.style.background = cfg.currentUser === 0 ? '#2D5A3D' : '#3D5A8A';
+    el.style.color = '#fff';
   }
   const n = document.getElementById('sidebarUserName');
   if (n) n.textContent = name;
@@ -1349,15 +1349,15 @@ async function deleteBudget(cat) {
 // ═══════════════════════════════════════════
 const CHART_OPTS = {
   responsive: true, maintainAspectRatio: false,
-  plugins: { legend: { labels: { color: '#8A8880', font: { family: 'DM Mono', size: 11 }, boxWidth: 10 } } },
+  plugins: { legend: { labels: { color: '#6B6860', font: { family: 'DM Sans', size: 11 }, boxWidth: 10 } } },
   scales: {
-    x: { grid: { color: '#2E2E29' }, ticks: { color: '#4A4A46', font: { family: 'DM Mono', size: 10 } } },
-    y: { grid: { color: '#2E2E29' }, ticks: { color: '#4A4A46', font: { family: 'DM Mono', size: 10 }, callback: v => cfg.currency + v } }
+    x: { grid: { color: '#E2E0D8' }, ticks: { color: '#A8A69E', font: { family: 'DM Sans', size: 10 } } },
+    y: { grid: { color: '#E2E0D8' }, ticks: { color: '#A8A69E', font: { family: 'DM Sans', size: 10 }, callback: v => cfg.currency + v } }
   }
 };
 const PIE_OPTS = {
   responsive: true, maintainAspectRatio: false,
-  plugins: { legend: { position: 'right', labels: { color: '#8A8880', font: { family: 'DM Mono', size: 11 }, boxWidth: 10, padding: 8 } } }
+  plugins: { legend: { position: 'right', labels: { color: '#6B6860', font: { family: 'DM Sans', size: 11 }, boxWidth: 10, padding: 8 } } }
 };
 
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
@@ -1375,7 +1375,7 @@ function renderCatChart() {
     .forEach(t=>{ d[t.category||'Other']=(d[t.category||'Other']||0)+t.amount; });
   const labels=Object.keys(d), vals=Object.values(d);
   if (!labels.length) { ctx.parentElement.innerHTML='<div class="empty" style="padding:36px">No spending data this month</div>'; return; }
-  const colors=['#C8F060','#E8614A','#4A90D9','#9B6FD4','#E8A020','#40B880','#E86090','#40C8D8'];
+  const colors=['#2D5A3D','#C8553D','#3D5A8A','#7A5A8A','#E8A020','#5A8A3D','#8A3D5A','#3D8A7A'];
   charts['catChart'] = new Chart(ctx, { type:'doughnut', data:{ labels, datasets:[{ data:vals, backgroundColor:colors.slice(0,labels.length), borderWidth:0, hoverOffset:4 }] }, options:PIE_OPTS });
 }
 
@@ -1392,8 +1392,8 @@ function renderFlowChart() {
     sD.push(txs.filter(t=>t.type==='spend').reduce((a,t)=>a+t.amount,0));
   }
   charts['flowChart'] = new Chart(ctx, { type:'bar', data:{ labels:months, datasets:[
-    { label:'Income', data:iD, backgroundColor:'#C8F060', borderRadius:3 },
-    { label:'Spend',  data:sD, backgroundColor:'#E8614A', borderRadius:3 }
+    { label:'Income', data:iD, backgroundColor:'#2D5A3D', borderRadius:3 },
+    { label:'Spend',  data:sD, backgroundColor:'#C8553D', borderRadius:3 }
   ]}, options:CHART_OPTS });
 }
 
@@ -1402,7 +1402,7 @@ function renderTypeChart() {
   const ctx = document.getElementById('typeChart'); if (!ctx) return;
   const d={spend:0,income:0,investment:0,transfer:0};
   data.transactions.forEach(t=>{ d[t.type]=(d[t.type]||0)+t.amount; });
-  charts['typeChart'] = new Chart(ctx, { type:'pie', data:{ labels:['Spend','Income','Investment','Transfer'], datasets:[{ data:[d.spend,d.income,d.investment,d.transfer], backgroundColor:['#E8614A','#C8F060','#4A90D9','#9B6FD4'], borderWidth:0 }] }, options:PIE_OPTS });
+  charts['typeChart'] = new Chart(ctx, { type:'pie', data:{ labels:['Spend','Income','Investment','Transfer'], datasets:[{ data:[d.spend,d.income,d.investment,d.transfer], backgroundColor:['#C8553D','#2D5A3D','#3D5A8A','#7A5A8A'], borderWidth:0 }] }, options:PIE_OPTS });
 }
 
 function renderMonthlyChart() {
@@ -1419,9 +1419,9 @@ function renderMonthlyChart() {
     invD.push(txs.filter(t=>t.type==='investment').reduce((a,t)=>a+t.amount,0));
   }
   charts['monthlyChart'] = new Chart(ctx, { type:'line', data:{ labels:months, datasets:[
-    { label:'Income', data:iD, borderColor:'#C8F060', backgroundColor:'rgba(200,240,96,0.06)', fill:true, tension:0.4, pointRadius:3 },
-    { label:'Spend',  data:sD, borderColor:'#E8614A', backgroundColor:'rgba(232,97,74,0.06)',  fill:true, tension:0.4, pointRadius:3 },
-    { label:'Invest', data:invD, borderColor:'#4A90D9', backgroundColor:'rgba(74,144,217,0.06)', fill:true, tension:0.4, pointRadius:3 }
+    { label:'Income', data:iD, borderColor:'#2D5A3D', backgroundColor:'rgba(45,90,61,0.06)', fill:true, tension:0.4, pointRadius:3 },
+    { label:'Spend',  data:sD, borderColor:'#C8553D', backgroundColor:'rgba(200,85,61,0.06)',  fill:true, tension:0.4, pointRadius:3 },
+    { label:'Invest', data:invD, borderColor:'#3D5A8A', backgroundColor:'rgba(61,90,138,0.06)', fill:true, tension:0.4, pointRadius:3 }
   ]}, options:CHART_OPTS });
 }
 
@@ -1438,8 +1438,8 @@ function renderPersonChart() {
     bD.push(txs.filter(t=>t.person===cfg.otherName).reduce((a,t)=>a+t.amount,0));
   }
   charts['personChart'] = new Chart(ctx, { type:'bar', data:{ labels:months, datasets:[
-    { label:cfg.userName, data:aD, backgroundColor:'#C8F060', borderRadius:3 },
-    { label:cfg.otherName, data:bD, backgroundColor:'#4A90D9', borderRadius:3 }
+    { label:cfg.userName, data:aD, backgroundColor:'#2D5A3D', borderRadius:3 },
+    { label:cfg.otherName, data:bD, backgroundColor:'#3D5A8A', borderRadius:3 }
   ]}, options:CHART_OPTS });
 }
 
