@@ -413,6 +413,11 @@ body {
         <input class="form-input" id="setupToken" type="password" placeholder="ghp_xxxxxxxxxxxx" />
         <div style="margin-top:5px;font-size:11.5px;color:var(--text3)">Your token stays on your device only — never sent anywhere except GitHub's API.</div>
       </div>
+      <div class="form-group" style="margin-top:10px">
+        <label class="form-label">Encryption password</label>
+        <input class="form-input" id="setupPassword" type="password" placeholder="Choose a strong shared password…" />
+        <div style="margin-top:5px;font-size:11.5px;color:var(--text3)">Both users must use the same password. Your data is AES-256 encrypted before being stored on GitHub — the repo can be public and no one can read it without this password.</div>
+      </div>
       <div class="form-row" style="margin-top:10px">
         <div class="form-group" style="margin-bottom:0">
           <label class="form-label">Your name</label>
@@ -591,6 +596,11 @@ body {
           <div class="form-group" style="margin-bottom:0"><label class="form-label">Repository</label><input class="form-input" id="cfgRepo"/></div>
         </div>
         <div class="form-group" style="margin-top:10px"><label class="form-label">Personal Access Token</label><input class="form-input" id="cfgToken" type="password"/></div>
+        <div class="form-group" style="margin-top:10px">
+          <label class="form-label">Encryption password</label>
+          <input class="form-input" id="cfgPassword" type="password" placeholder="Must match the other user's password"/>
+          <div style="margin-top:5px;font-size:11.5px;color:var(--text3)">Change this only if both users change it simultaneously — mismatched passwords make data unreadable.</div>
+        </div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-primary" onclick="saveGitConfig()">Save</button>
           <button class="btn btn-ghost" onclick="syncNow()">↻ Sync now</button>
@@ -682,7 +692,8 @@ body {
 let cfg = {
   owner: '', repo: '', token: '',
   userName: 'User A', otherName: 'User B',
-  currency: '$', currentUser: 0
+  currency: '$', currentUser: 0,
+  password: ''   // AES-256 encryption key — never leaves this device
 };
 
 // ═══════════════════════════════════════════
@@ -718,6 +729,7 @@ function generateInviteLink() {
     repo:  cfg.repo,
     ua:    cfg.userName,    // inviter's name → becomes "other person" for the invitee
     ub:    cfg.otherName,   // suggested name for the invitee
+    pw:    cfg.password,    // shared encryption password — same for both users
   });
 
   // Optionally include a pre-filled token (user B's token if you've generated one)
@@ -750,6 +762,7 @@ function boot() {
   const invToken = params.get('token');
   const invUa    = params.get('ua');   // other person's name (the inviter)
   const invUb    = params.get('ub');   // suggested name for this user
+  const invPw    = params.get('pw');   // shared encryption password
 
   if (invOwner || invRepo) {
     // Pre-fill setup form from invite link
@@ -757,6 +770,7 @@ function boot() {
     if (invOwner) document.getElementById('setupOwner').value    = invOwner;
     if (invRepo)  document.getElementById('setupRepo').value     = invRepo;
     if (invToken) document.getElementById('setupToken').value    = invToken;
+    if (invPw)    document.getElementById('setupPassword').value = invPw;
     if (invUb)    document.getElementById('setupUserName').value = invUb;
     if (invUa)    document.getElementById('setupOtherName').value= invUa;
     document.getElementById('inviteBanner').style.display = 'block';
@@ -805,9 +819,11 @@ function saveLocalConfig() {
 }
 
 function saveGitConfig() {
-  cfg.owner = document.getElementById('cfgOwner').value.trim();
-  cfg.repo  = document.getElementById('cfgRepo').value.trim();
-  cfg.token = document.getElementById('cfgToken').value.trim();
+  cfg.owner    = document.getElementById('cfgOwner').value.trim();
+  cfg.repo     = document.getElementById('cfgRepo').value.trim();
+  cfg.token    = document.getElementById('cfgToken').value.trim();
+  const pw     = document.getElementById('cfgPassword').value.trim();
+  if (pw) cfg.password = pw;
   saveCfg();
   syncNow();
   toast('GitHub config saved ✓', 'success');
@@ -817,21 +833,26 @@ function populateSettingsFields() {
   document.getElementById('cfgOwner').value    = cfg.owner;
   document.getElementById('cfgRepo').value     = cfg.repo;
   document.getElementById('cfgToken').value    = cfg.token;
+  document.getElementById('cfgPassword').placeholder = cfg.password ? '••••••••  (set)' : 'Not set — enter password';
   document.getElementById('cfgUserA').value    = cfg.userName;
   document.getElementById('cfgUserB').value    = cfg.otherName;
   document.getElementById('cfgCurrency').value = cfg.currency;
 }
 
 async function saveSetup() {
-  const owner = document.getElementById('setupOwner').value.trim();
-  const repo  = document.getElementById('setupRepo').value.trim();
-  const token = document.getElementById('setupToken').value.trim();
-  const uA    = document.getElementById('setupUserName').value.trim();
-  const uB    = document.getElementById('setupOtherName').value.trim();
-  const errEl = document.getElementById('setupError');
+  const owner    = document.getElementById('setupOwner').value.trim();
+  const repo     = document.getElementById('setupRepo').value.trim();
+  const token    = document.getElementById('setupToken').value.trim();
+  const password = document.getElementById('setupPassword').value.trim();
+  const uA       = document.getElementById('setupUserName').value.trim();
+  const uB       = document.getElementById('setupOtherName').value.trim();
+  const errEl    = document.getElementById('setupError');
   errEl.style.display = 'none';
 
-  if (!owner || !repo || !token || !uA) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
+  if (!owner || !repo || !token || !uA || !password) {
+    errEl.textContent = 'Please fill in all fields including the encryption password.';
+    errEl.style.display = 'block'; return;
+  }
 
   // Test the token by trying to read the repo
   try {
@@ -842,6 +863,7 @@ async function saveSetup() {
   }
 
   cfg.owner = owner; cfg.repo = repo; cfg.token = token;
+  cfg.password = password;
   cfg.userName = uA || 'User A'; cfg.otherName = uB || 'User B';
   saveCfg();
   launchApp();
@@ -855,9 +877,57 @@ function resetSetup() {
 }
 
 // ═══════════════════════════════════════════
+// AES-256-GCM ENCRYPTION (Web Crypto API)
+// ═══════════════════════════════════════════
+
+// Derive a 256-bit AES key from the shared password using PBKDF2
+async function deriveKey(password, saltBuf) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: saltBuf, iterations: 200000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false, ['encrypt', 'decrypt']
+  );
+}
+
+// Encrypt a plain string → base64 blob containing salt + iv + ciphertext
+async function encryptData(plaintext, password) {
+  const enc     = new TextEncoder();
+  const salt    = crypto.getRandomValues(new Uint8Array(16));
+  const iv      = crypto.getRandomValues(new Uint8Array(12));
+  const key     = await deriveKey(password, salt);
+  const cipher  = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    enc.encode(plaintext)
+  );
+  // Pack: [salt 16B][iv 12B][ciphertext]
+  const packed = new Uint8Array(16 + 12 + cipher.byteLength);
+  packed.set(salt, 0);
+  packed.set(iv, 16);
+  packed.set(new Uint8Array(cipher), 28);
+  return btoa(String.fromCharCode(...packed));
+}
+
+// Decrypt a base64 blob → plain string
+async function decryptData(b64, password) {
+  const packed  = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const salt    = packed.slice(0, 16);
+  const iv      = packed.slice(16, 28);
+  const cipher  = packed.slice(28);
+  const key     = await deriveKey(password, salt);
+  const plain   = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipher);
+  return new TextDecoder().decode(plain);
+}
+
+// ═══════════════════════════════════════════
 // GITHUB API
 // ═══════════════════════════════════════════
-const DATA_FILE = 'data.json';
+const DATA_FILE = 'data.enc'; // encrypted blob, safe to store in a public repo
 
 function ghFetch(url, token, options={}) {
   return fetch(url, {
@@ -875,13 +945,12 @@ function apiUrl(path) {
   return `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`;
 }
 
-// Pull latest data.json from GitHub
+// Pull & decrypt data.enc from GitHub
 async function pullFromGitHub() {
   setSyncState('syncing');
   try {
     const res = await ghFetch(apiUrl(DATA_FILE) + '?ref=main&t=' + Date.now());
     if (res.status === 404) {
-      // File doesn't exist yet — that's fine, we'll create it on first push
       remoteSha = null;
       setSyncState('ok', 'No data yet');
       return true;
@@ -889,9 +958,22 @@ async function pullFromGitHub() {
     if (!res.ok) throw new Error('Pull failed: ' + res.status);
     const json = await res.json();
     remoteSha = json.sha;
-    const decoded = JSON.parse(atob(json.content.replace(/\n/g,'')));
 
-    // Conflict check: if local version > remote version we have unsaved local changes
+    // The file content is base64-encoded by GitHub; decode to get our encrypted blob
+    const encBlob = atob(json.content.replace(/\n/g,''));
+
+    // Decrypt with the shared password
+    let decoded;
+    try {
+      const plain = await decryptData(encBlob, cfg.password);
+      decoded = JSON.parse(plain);
+    } catch(e) {
+      setSyncState('error', 'Wrong password or corrupted data');
+      toast('❌ Wrong password — check Settings', 'error');
+      return false;
+    }
+
+    // Conflict check
     if (data.version > 0 && decoded.version < data.version) {
       setSyncState('conflict');
       showConflict(decoded);
@@ -907,14 +989,22 @@ async function pullFromGitHub() {
   }
 }
 
-// Push local data.json to GitHub
+// Encrypt & push data.enc to GitHub
 async function pushToGitHub() {
+  if (!cfg.password) { toast('Set an encryption password in Settings first', 'error'); return false; }
   setSyncState('syncing');
   data.version = (data.version || 0) + 1;
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+
+  // Encrypt the data JSON
+  const encBlob = await encryptData(JSON.stringify(data), cfg.password);
+
+  // GitHub requires the file content as base64 of the raw bytes
+  // Our encBlob is already a base64 string — re-encode it as base64 for the API
+  const apiContent = btoa(encBlob);
+
   const body = {
     message: `Update transactions (v${data.version})`,
-    content,
+    content: apiContent,
     branch: 'main'
   };
   if (remoteSha) body.sha = remoteSha;
@@ -924,9 +1014,8 @@ async function pushToGitHub() {
       body: JSON.stringify(body)
     });
     if (res.status === 409) {
-      // Conflict — someone else pushed while we were editing
       setSyncState('conflict');
-      toast('Conflict detected — pulling latest first…', 'error');
+      toast('Conflict — pulling latest first…', 'error');
       await pullFromGitHub();
       return false;
     }
