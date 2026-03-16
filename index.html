@@ -242,6 +242,80 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
   .fg2{grid-template-columns:1fr;}
   .type-sel{grid-template-columns:repeat(2,1fr);}
 }
+
+/* ── CATEGORY MANAGER ── */
+.cat-tree{display:flex;flex-direction:column;gap:6px;}
+.cat-group{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.cat-group-header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);cursor:pointer;user-select:none;}
+.cat-group-icon{font-size:18px;flex-shrink:0;}
+.cat-group-label{flex:1;font-weight:600;font-size:13.5px;}
+.cat-group-meta{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.cat-group-actions{display:flex;gap:6px;opacity:0;transition:opacity .15s;}
+.cat-group-header:hover .cat-group-actions{opacity:1;}
+.cat-children{padding:6px 8px;display:flex;flex-direction:column;gap:4px;}
+.cat-child{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:var(--rs);background:var(--surface);border:1px solid var(--border);}
+.cat-child-icon{font-size:15px;flex-shrink:0;}
+.cat-child-label{flex:1;font-size:13px;}
+.cat-child-meta{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.cat-child-actions{display:flex;gap:5px;opacity:0;transition:opacity .15s;}
+.cat-child:hover .cat-child-actions{opacity:1;}
+.cat-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block;}
+
+/* ── COLOR PALETTE ── */
+.color-palette{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}
+.color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s,border-color .1s;flex-shrink:0;}
+.color-swatch:hover{transform:scale(1.15);}
+.color-swatch.selected{border-color:var(--text);transform:scale(1.1);}
+
+/* ── ICON PICKER ── */
+.icon-grid{display:flex;flex-wrap:wrap;gap:6px;max-height:200px;overflow-y:auto;padding:4px;}
+.icon-opt{width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:all .12s;}
+.icon-opt:hover{background:var(--surface2);}
+.icon-opt.selected{background:var(--green-l);border-color:var(--green);}
+
+/* ── THEME EDITOR ── */
+.theme-preview{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;}
+.theme-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.theme-label{font-size:12px;font-weight:500;color:var(--text2);width:110px;flex-shrink:0;}
+.theme-swatch-wrap{display:flex;flex-wrap:wrap;gap:5px;flex:1;}
+
+/* ── ACCOUNT CARD ENHANCED ── */
+.acc-card-actions{display:flex;gap:6px;margin-top:10px;opacity:0;transition:opacity .15s;}
+.acc-card:hover .acc-card-actions{opacity:1;}
+.acc-color-bar{height:3px;border-radius:0 0 var(--r) var(--r);margin:-14px -16px 12px;margin-top:-14px;}
+
+/* ── VIEW SWITCHER ── */
+.view-tabs{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:3px;gap:2px;}
+.view-tab{padding:5px 11px;border-radius:4px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
+.view-tab:hover{color:var(--text);}
+.view-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+
+/* ── HYBRID / ALL VIEW ── */
+.hv-nature{margin-bottom:16px;}
+.hv-nature-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:var(--rs) var(--rs) 0 0;border:1px solid var(--border);border-bottom:none;cursor:pointer;font-weight:600;font-size:13px;}
+.hv-nature-body{border:1px solid var(--border);border-radius:0 0 var(--rs) var(--rs);overflow:hidden;}
+.hv-group{border-bottom:1px solid var(--border);}
+.hv-group:last-child{border-bottom:none;}
+.hv-group-header{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--surface);cursor:pointer;font-size:13px;font-weight:500;}
+.hv-group-header:hover{background:var(--surface2);}
+.hv-group-icon{margin-right:6px;}
+.hv-children{background:var(--bg);}
+.hv-child{display:flex;justify-content:space-between;align-items:center;padding:7px 14px 7px 32px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text2);}
+.hv-child:hover{background:var(--surface2);}
+.hv-amount{font-family:'DM Mono',monospace;font-size:12.5px;}
+.hv-pct{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-left:8px;}
+.hv-collapsed .hv-children{display:none;}
+.hv-collapsed .hv-group-header::after{content:'▸';font-size:10px;color:var(--text3);}
+.hv-group-header::after{content:'▾';font-size:10px;color:var(--text3);}
+
+/* ── DASHBOARD CATEGORY BREAKDOWN ── */
+.dash-cat-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.dash-cat-row:last-child{border-bottom:none;}
+.dash-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dash-cat-name{flex:1;font-size:13px;}
+.dash-cat-bar-wrap{width:80px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.dash-cat-bar{height:100%;border-radius:2px;}
+.dash-cat-amt{font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);width:70px;text-align:right;}
 </style>
 </head>
 <body>
@@ -386,7 +460,18 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         <div class="stat-card"><div class="stat-label">Net</div><div class="stat-value" id="sNet">—</div><div class="stat-delta">income − spending</div></div>
       </div>
       <div class="grid-2">
-        <div class="card"><div class="card-title">By category <span style="color:var(--text3)">this month</span></div><div class="ch"><canvas id="catChart"></canvas></div></div>
+        <div class="card">
+          <div class="card-title">
+            Spending breakdown
+            <div class="view-tabs">
+              <button class="view-tab active" onclick="setDashView('nature',this)">Nature</button>
+              <button class="view-tab" onclick="setDashView('group',this)">Group</button>
+              <button class="view-tab" onclick="setDashView('sub',this)">Sub</button>
+              <button class="view-tab" onclick="setDashView('all',this)">All</button>
+            </div>
+          </div>
+          <div id="dashCatView"></div>
+        </div>
         <div class="card"><div class="card-title">Cash flow <span style="color:var(--text3)">6 months</span></div><div class="ch"><canvas id="flowChart"></canvas></div></div>
       </div>
       <div class="card">
@@ -405,6 +490,15 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
           <button class="btn btn-primary" onclick="openAddTx()">+ Add</button>
         </div>
       </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div class="view-tabs">
+          <button class="view-tab active" onclick="setTxView('flat',this)">All</button>
+          <button class="view-tab" onclick="setTxView('nature',this)">Nature</button>
+          <button class="view-tab" onclick="setTxView('group',this)">Group</button>
+          <button class="view-tab" onclick="setTxView('sub',this)">Subcategory</button>
+          <button class="view-tab" onclick="setTxView('hybrid',this)">Hybrid</button>
+        </div>
+      </div>
       <div class="filters">
         <input class="fsearch" id="txSearch" placeholder="Search…" oninput="renderTxPage()">
         <select class="fsel" id="fType" onchange="renderTxPage()"><option value="">All types</option><option value="spend">Spend</option><option value="income">Income</option><option value="investment">Investment</option><option value="transfer">Transfer</option></select>
@@ -413,17 +507,20 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         <select class="fsel" id="fPerson" onchange="renderTxPage()"></select>
         <select class="fsel" id="fMonth" onchange="renderTxPage()"></select>
       </div>
-      <div class="card" style="padding:0;overflow:hidden">
-        <table class="tbl">
-          <thead><tr>
-            <th style="padding:12px 10px 10px">Date</th><th>Description</th><th>Category</th>
-            <th>Type</th><th>Account</th><th>By</th><th>Notes</th>
-            <th style="text-align:right;padding-right:14px">Amount</th><th></th>
-          </tr></thead>
-          <tbody id="txBody"></tbody>
-        </table>
-        <div id="txEmpty" class="empty" style="display:none">No transactions match</div>
+      <div id="txFlatView">
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="tbl">
+            <thead><tr>
+              <th style="padding:12px 10px 10px">Date</th><th>Description</th><th>Category</th>
+              <th>Type</th><th>Account</th><th>By</th><th>Notes</th>
+              <th style="text-align:right;padding-right:14px">Amount</th><th></th>
+            </tr></thead>
+            <tbody id="txBody"></tbody>
+          </table>
+          <div id="txEmpty" class="empty" style="display:none">No transactions match</div>
+        </div>
       </div>
+      <div id="txGroupedView" style="display:none"></div>
     </div>
 
     <!-- ACCOUNTS -->
@@ -443,7 +540,14 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <div class="page" id="page-budgets">
       <div class="page-header">
         <div><div class="page-title">Budgets</div><div class="page-sub">monthly spending limits</div></div>
-        <button class="btn btn-primary" onclick="openAddBudget()">+ Set budget</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="view-tabs">
+            <button class="view-tab active" onclick="setBudgetView('group',this)">Group</button>
+            <button class="view-tab" onclick="setBudgetView('nature',this)">Nature</button>
+            <button class="view-tab" onclick="setBudgetView('sub',this)">Subcategory</button>
+          </div>
+          <button class="btn btn-primary" onclick="openAddBudget()">+ Set budget</button>
+        </div>
       </div>
       <div class="grid-2" id="budgetGrid"></div>
     </div>
@@ -451,8 +555,23 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <!-- ANALYTICS -->
     <div class="page" id="page-analytics">
       <div class="page-header"><div><div class="page-title">Analytics</div><div class="page-sub">trends &amp; breakdowns</div></div></div>
+      <div class="card mb16">
+        <div class="card-title">
+          Category breakdown
+          <div class="view-tabs">
+            <button class="view-tab active" onclick="setAnalyticsView('nature',this)">Nature</button>
+            <button class="view-tab" onclick="setAnalyticsView('group',this)">Group</button>
+            <button class="view-tab" onclick="setAnalyticsView('sub',this)">Subcategory</button>
+            <button class="view-tab" onclick="setAnalyticsView('all',this)">All</button>
+          </div>
+        </div>
+        <div class="grid-2" style="margin:0">
+          <div class="ch"><canvas id="catChart"></canvas></div>
+          <div id="analyticsBreakdown" style="overflow-y:auto;max-height:220px"></div>
+        </div>
+      </div>
       <div class="grid-2 mb16">
-        <div class="card"><div class="card-title">By type</div><div class="ch"><canvas id="typeChart"></canvas></div></div>
+        <div class="card"><div class="card-title">By transaction type</div><div class="ch"><canvas id="typeChart"></canvas></div></div>
         <div class="card"><div class="card-title">Monthly totals</div><div class="ch-lg"><canvas id="monthlyChart"></canvas></div></div>
       </div>
       <div class="card mb16">
@@ -465,6 +584,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <div class="page" id="page-settings">
       <div class="page-header"><div><div class="page-title">Settings</div></div></div>
 
+      <!-- HOUSEHOLD -->
       <div class="s-section">
         <div class="s-title">Household</div>
         <div class="fg"><label class="fl">Household name</label>
@@ -481,6 +601,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         </div>
       </div>
 
+      <!-- DISPLAY -->
       <div class="s-section">
         <div class="s-title">Display</div>
         <div class="fg" style="max-width:200px"><label class="fl">Currency symbol</label>
@@ -491,25 +612,40 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         </div>
       </div>
 
+      <!-- THEME -->
       <div class="s-section">
-        <div class="s-title">Categories</div>
-        <div class="tag-list" id="catList"></div>
-        <div class="tag-add">
-          <input class="fi" id="newCat" placeholder="New category…" style="max-width:180px"/>
-          <button class="btn btn-ghost" onclick="addCategory()">Add</button>
+        <div class="s-title">Theme &amp; Colors</div>
+        <div class="f-hint" style="margin-bottom:12px">Changes apply to everyone in your household instantly.</div>
+        <div id="themeEditor"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveTheme()">Save theme</button>
+          <button class="btn btn-ghost" onclick="resetTheme()">Reset to default</button>
         </div>
       </div>
 
+      <!-- CATEGORIES -->
       <div class="s-section">
-        <div class="s-title">Accounts</div>
-        <div class="tag-list" id="accTagList"></div>
-        <button class="btn btn-ghost" style="font-size:12px" onclick="openAddAccount()">+ Add account</button>
+        <div class="s-title" style="display:flex;justify-content:space-between;align-items:center">
+          Categories
+          <button class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="openCatModal()">+ Add category</button>
+        </div>
+        <div class="cat-tree" id="catTree"></div>
       </div>
 
+      <!-- ACCOUNTS -->
+      <div class="s-section">
+        <div class="s-title" style="display:flex;justify-content:space-between;align-items:center">
+          Accounts
+          <button class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="openAddAccount()">+ Add account</button>
+        </div>
+        <div class="tag-list" id="accTagList"></div>
+      </div>
+
+      <!-- RECURRING -->
       <div class="s-section">
         <div class="s-title">Recurring transactions</div>
         <div id="recurList"></div>
-        <div class="f-hint" style="margin-top:8px">Mark any transaction as recurring when adding it. Recurring transactions are shown here for review.</div>
+        <div class="f-hint" style="margin-top:8px">Mark any transaction as recurring when adding it.</div>
       </div>
 
       <button class="btn btn-danger" onclick="signOutAndClear()">Sign out</button>
@@ -563,24 +699,120 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
   </div>
 </div>
 
-<!-- ADD ACCOUNT MODAL -->
+<!-- ADD/EDIT ACCOUNT MODAL -->
 <div class="overlay" id="accModal">
   <div class="modal">
-    <div class="modal-title">Add Account</div>
-    <div class="fg"><label class="fl">Account name</label><input class="fi" id="accName" placeholder="e.g. Checking"/></div>
+    <div class="modal-title" id="accModalTitle">Add Account</div>
+    <div class="fg"><label class="fl">Account name</label><input class="fi" id="accName" placeholder="e.g. Main Checking"/></div>
+    <div class="fg2">
+      <div class="fg" style="margin:0">
+        <label class="fl">Type</label>
+        <select class="fs" id="accType" onchange="toggleCustomType()">
+          <option value="checking">Checking</option>
+          <option value="savings">Savings</option>
+          <option value="credit">Credit Card</option>
+          <option value="cash">Cash</option>
+          <option value="investment">Investment</option>
+          <option value="custom">Custom…</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0" id="accCustomTypeRow" style="display:none">
+        <label class="fl">Custom type name</label>
+        <input class="fi" id="accCustomType" placeholder="e.g. Crypto"/>
+      </div>
+    </div>
     <div class="fg">
-      <label class="fl">Type</label>
-      <select class="fs" id="accType">
-        <option value="checking">Checking</option>
-        <option value="savings">Savings</option>
-        <option value="credit">Credit Card</option>
-        <option value="cash">Cash</option>
-        <option value="investment">Investment</option>
-      </select>
+      <label class="fl">Opening balance</label>
+      <input class="fi" id="accOpeningBal" type="number" step="0.01" placeholder="0.00"/>
+      <div class="f-hint">The starting balance of this account. Transactions are calculated on top.</div>
+    </div>
+    <div class="fg">
+      <label class="fl">Account color</label>
+      <div class="color-palette" id="accColorPalette"></div>
+      <input type="hidden" id="accColor" value="#2D5A3D"/>
     </div>
     <div class="f-actions">
       <button class="btn btn-ghost" onclick="closeModal('accModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveAccount()">Save</button>
+      <button class="btn btn-primary" onclick="saveAccount()" id="accSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- BALANCE ADJUSTMENT MODAL -->
+<div class="overlay" id="adjModal">
+  <div class="modal">
+    <div class="modal-title">Adjust Balance</div>
+    <input type="hidden" id="adjAccId"/>
+    <div class="fg">
+      <label class="fl">Current calculated balance</label>
+      <div id="adjCurrentBal" style="font-size:20px;font-weight:700;padding:8px 0;font-family:'DM Mono',monospace"></div>
+    </div>
+    <div class="fg">
+      <label class="fl">Actual balance (what it should be)</label>
+      <input class="fi" id="adjTargetBal" type="number" step="0.01" placeholder="0.00"/>
+      <div class="f-hint">An adjustment transaction will be created for the difference.</div>
+    </div>
+    <div class="fg">
+      <label class="fl">Date</label>
+      <input class="fi" id="adjDate" type="date"/>
+    </div>
+    <div class="f-actions">
+      <button class="btn btn-ghost" onclick="closeModal('adjModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAdjustment()">Apply adjustment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT CATEGORY MODAL -->
+<div class="overlay" id="catModal">
+  <div class="modal">
+    <div class="modal-title" id="catModalTitle">Add Category</div>
+    <input type="hidden" id="catEditId"/>
+    <div class="fg2">
+      <div class="fg" style="margin:0">
+        <label class="fl">Name</label>
+        <input class="fi" id="catName" placeholder="e.g. Groceries"/>
+      </div>
+      <div class="fg" style="margin:0">
+        <label class="fl">Parent group (optional)</label>
+        <select class="fs" id="catParent">
+          <option value="">— Top level group —</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg2">
+      <div class="fg" style="margin:0">
+        <label class="fl">Nature</label>
+        <select class="fs" id="catNature">
+          <option value="Income">Income</option>
+          <option value="Essentials">Essentials</option>
+          <option value="Variables" selected>Variables</option>
+          <option value="Investments">Investments</option>
+          <option value="Debt">Debt</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0">
+        <label class="fl">Type</label>
+        <select class="fs" id="catType">
+          <option value="Fixed">Fixed</option>
+          <option value="Variable" selected>Variable</option>
+          <option value="One-time">One-time</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Icon</label>
+      <div class="icon-grid" id="iconGrid"></div>
+      <input type="hidden" id="catIcon" value="📦"/>
+    </div>
+    <div class="fg">
+      <label class="fl">Color</label>
+      <div class="color-palette" id="catColorPalette"></div>
+      <input type="hidden" id="catColor" value="#6aa84f"/>
+    </div>
+    <div class="f-actions">
+      <button class="btn btn-ghost" onclick="closeModal('catModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCatModal()" id="catSaveBtn">Save</button>
     </div>
   </div>
 </div>
@@ -687,18 +919,20 @@ async function loadProfileAndHousehold() {
 // ═══════════════════════════════════════════════════════════════
 async function loadAllData() {
   const hhId = household.id;
-  const [txRes, catRes, accRes, budRes, profRes] = await Promise.all([
+  const [txRes, catRes, accRes, budRes, profRes, setRes] = await Promise.all([
     sb.from('transactions').select('*').eq('household_id', hhId).order('date', { ascending: false }).order('created_at', { ascending: false }),
-    sb.from('categories').select('*').eq('household_id', hhId).order('name'),
+    sb.from('categories').select('*').eq('household_id', hhId).order('sort_order').order('name'),
     sb.from('accounts').select('*').eq('household_id', hhId).order('name'),
     sb.from('budgets').select('*').eq('household_id', hhId),
-    sb.from('profiles').select('*').eq('household_id', hhId)
+    sb.from('profiles').select('*').eq('household_id', hhId),
+    sb.from('household_settings').select('*').eq('household_id', hhId).maybeSingle()
   ]);
-  if (txRes.data)   transactions = txRes.data;
-  if (catRes.data)  categories   = catRes.data;
-  if (accRes.data)  accounts     = accRes.data;
-  if (budRes.data)  budgets      = budRes.data;
-  if (profRes.data) profiles     = profRes.data;
+  if (txRes.data)   transactions     = txRes.data;
+  if (catRes.data)  categories       = catRes.data;
+  if (accRes.data)  accounts         = accRes.data;
+  if (budRes.data)  budgets          = budRes.data;
+  if (profRes.data) profiles         = profRes.data;
+  if (setRes.data)  { householdSettings = setRes.data; applyTheme(setRes.data.theme); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -839,14 +1073,15 @@ async function joinHousehold() {
 // RENDER ALL
 // ═══════════════════════════════════════════════════════════════
 function renderAll() {
-  renderStats();
+  renderStats();          // includes renderDashCatView
   renderTxPage();
   renderAccounts();
   renderBudgets();
-  renderCharts();
-  renderCatSettings();
+  renderCharts();         // includes renderCatChart + renderAnalyticsBreakdown
+  renderCatTree();
   renderAccSettings();
   renderRecurSettings();
+  renderThemeEditor();
   populateFilters();
   populateTxDropdowns();
 }
@@ -873,6 +1108,7 @@ function renderStats() {
   set('sIncomeN', monthly.filter(t=>t.type==='income').length + ' txns');
   set('sSpendN',  monthly.filter(t=>t.type==='spend').length  + ' txns');
   set('sInvestN', monthly.filter(t=>t.type==='investment').length + ' txns');
+  renderDashCatView();
   // Recent
   const body = document.getElementById('recentBody');
   if (body) body.innerHTML = transactions.slice(0,7).map(t=>txRow(t,false)).join('') || '<tr><td colspan="7" class="empty" style="padding:24px">No transactions yet</td></tr>';
@@ -940,26 +1176,21 @@ function renderAccounts() {
   if (!grid) return;
   if (!accounts.length) { grid.innerHTML='<div class="empty" style="grid-column:1/-1">No accounts yet — add one</div>'; return; }
 
-  // Compute balance per account from transactions
-  const balances = {};
-  accounts.forEach(a => balances[a.id] = 0);
-  transactions.forEach(t => {
-    if (t.type === 'income')     balances[t.account_id] = (balances[t.account_id]||0) + Number(t.amount);
-    if (t.type === 'spend')      balances[t.account_id] = (balances[t.account_id]||0) - Number(t.amount);
-    if (t.type === 'investment') balances[t.account_id] = (balances[t.account_id]||0) - Number(t.amount);
-    if (t.type === 'transfer') {
-      balances[t.account_id]    = (balances[t.account_id]||0)    - Number(t.amount);
-      balances[t.to_account_id] = (balances[t.to_account_id]||0) + Number(t.amount);
-    }
-  });
-
-  grid.innerHTML = accounts.map(a => {
-    const bal = balances[a.id] || 0;
+  grid.innerHTML = accounts.filter(a=>!a.is_archived).map(a => {
+    const bal = calcBalance(a.id);
     const txCount = transactions.filter(t => t.account_id===a.id || t.to_account_id===a.id).length;
+    const typeLabel = a.type==='custom' ? (a.custom_type||'custom') : a.type;
+    const barColor = a.color || 'var(--green)';
     return `<div class="acc-card">
-      <div class="acc-name">${esc(a.name)} <span style="color:var(--text3);font-weight:400">${a.type}</span></div>
+      <div class="acc-color-bar" style="background:${barColor}"></div>
+      <div class="acc-name">${esc(a.name)} <span style="color:var(--text3);font-weight:400">${typeLabel}</span></div>
       <div class="acc-bal ${bal>=0?'pos':'neg'}">${bal>=0?'':'-'}${currency}${fmt(Math.abs(bal))}</div>
-      <div class="acc-sub">${txCount} transaction${txCount!==1?'s':''}</div>
+      <div class="acc-sub">${txCount} transaction${txCount!==1?'s':''} · opening: ${currency}${fmt(a.opening_balance||0)}</div>
+      <div class="acc-card-actions">
+        <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="openAddAccount('${a.id}')">edit</button>
+        <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="openAdjustModal('${a.id}')">adjust balance</button>
+        <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteAccount('${a.id}')">del</button>
+      </div>
     </div>`;
   }).join('');
 
@@ -971,32 +1202,60 @@ function renderAccounts() {
 // BUDGETS
 // ═══════════════════════════════════════════════════════════════
 function renderBudgets() {
-  const now = new Date(), m = now.getMonth(), y = now.getFullYear();
-  const ms = {};
-  transactions.filter(t => {
-    const d = new Date(t.date+'T00:00:00');
-    return t.type==='spend' && d.getMonth()===m && d.getFullYear()===y;
-  }).forEach(t => { ms[t.category_id] = (ms[t.category_id]||0) + Number(t.amount); });
-
+  const byCat = spendByCatId();
   const grid = document.getElementById('budgetGrid');
   if (!grid) return;
-  if (!budgets.length) { grid.innerHTML='<div class="card" style="grid-column:span 2"><div class="empty">No budgets set yet</div></div>'; return; }
+  if (!budgets.length) { grid.innerHTML='<div class="card" style="grid-column:span 2"><div class="empty">No budgets set yet — click "+ Set budget" above</div></div>'; return; }
 
-  grid.innerHTML = budgets.map(b => {
-    const cat   = categories.find(c=>c.id===b.category_id);
-    const spent = ms[b.category_id] || 0;
-    const pct   = Math.min((spent/b.amount)*100, 100);
-    const cls   = pct>=100?'over':pct>=80?'warn':'ok';
-    return `<div class="card">
-      <div class="card-title">${esc(cat?.name||'Unknown')}
-        <button class="btn btn-ghost" style="padding:2px 8px;font-size:11px" onclick="deleteBudget('${b.id}')">remove</button>
+  // Build display budgets depending on view level
+  let displayBudgets = [];
+
+  if (budgetView === 'sub') {
+    displayBudgets = budgets.map(b => {
+      const cat   = categories.find(c=>c.id===b.category_id);
+      const spent = byCat[b.category_id]||0;
+      return { label: (cat?.icon||'')+' '+(cat?.name||'Unknown'), color: cat?.color||'var(--green)', spent, limit: b.amount, id: b.id };
+    });
+  } else if (budgetView === 'group') {
+    // Roll budgets up to group — combine any budgets whose cat shares a parent
+    const groupMap = {};
+    budgets.forEach(b => {
+      const cat   = categories.find(c=>c.id===b.category_id);
+      const gid   = cat?.parent_id || b.category_id;
+      const group = categories.find(c=>c.id===gid);
+      const key   = gid;
+      if (!groupMap[key]) groupMap[key] = { label:(group?.icon||'')+'  '+(group?.name||'Unknown'), color:group?.color||'var(--green)', spent:0, limit:0, id:b.id };
+      groupMap[key].limit += b.amount;
+      // Roll up actual spend
+      const childIds = [gid, ...categories.filter(c=>c.parent_id===gid).map(c=>c.id)];
+      childIds.forEach(cid => { groupMap[key].spent += byCat[cid]||0; });
+    });
+    displayBudgets = Object.values(groupMap);
+  } else { // nature
+    const natureMap = {};
+    budgets.forEach(b => {
+      const cat    = categories.find(c=>c.id===b.category_id);
+      const nature = cat?.nature || categories.find(c=>c.id===cat?.parent_id)?.nature || 'Variables';
+      if (!natureMap[nature]) natureMap[nature] = { label:nature, color:NATURE_COLORS[nature]||'#888', spent:0, limit:0, id:b.id };
+      natureMap[nature].limit += b.amount;
+      natureMap[nature].spent += byCat[b.category_id]||0;
+    });
+    displayBudgets = Object.values(natureMap);
+  }
+
+  grid.innerHTML = displayBudgets.map(d => {
+    const pct = Math.min((d.spent/d.limit)*100, 100);
+    const cls = pct>=100?'over':pct>=80?'warn':'ok';
+    return `<div class="card" style="border-top:3px solid ${d.color}">
+      <div class="card-title">${esc(d.label)}
+        ${d.id?`<button class="btn btn-ghost" style="padding:2px 8px;font-size:11px" onclick="deleteBudget('${d.id}')">remove</button>`:''}
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
-        <span>${currency}${fmt(spent)} spent</span><span>of ${currency}${fmt(b.amount)}</span>
+        <span>${currency}${fmt(d.spent)} spent</span><span>of ${currency}${fmt(d.limit)}</span>
       </div>
-      <div class="bbar-wrap"><div class="bbar-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="bbar-wrap"><div class="bbar-fill ${cls}" style="width:${pct}%;background:${d.color}"></div></div>
       <div style="margin-top:6px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">
-        ${(b.amount-spent)>=0 ? currency+fmt(b.amount-spent)+' remaining' : currency+fmt(Math.abs(b.amount-spent))+' over'}
+        ${(d.limit-d.spent)>=0?currency+fmt(d.limit-d.spent)+' remaining':currency+fmt(Math.abs(d.limit-d.spent))+' over'}
       </div>
     </div>`;
   }).join('');
@@ -1075,8 +1334,24 @@ function editTx(id) {
 
 function populateTxDropdowns() {
   const catSel = document.getElementById('txCat');
-  if (catSel) catSel.innerHTML = categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
-  const accOpts = accounts.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  if (catSel) {
+    // Build grouped options: top-level first, then subcategories indented under parent
+    const roots = categories.filter(c=>!c.parent_id);
+    const kids  = (pid) => categories.filter(c=>c.parent_id===pid);
+    let opts = '<option value="">— Select category —</option>';
+    roots.forEach(r => {
+      const subs = kids(r.id);
+      if (subs.length) {
+        opts += `<optgroup label="${r.icon||''} ${esc(r.name)}">`;
+        subs.forEach(s => { opts += `<option value="${s.id}">${s.icon||''} ${esc(s.name)}</option>`; });
+        opts += '</optgroup>';
+      } else {
+        opts += `<option value="${r.id}">${r.icon||''} ${esc(r.name)}</option>`;
+      }
+    });
+    catSel.innerHTML = opts;
+  }
+  const accOpts = accounts.filter(a=>!a.is_archived).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
   const accSel  = document.getElementById('txAcc');
   const fromSel = document.getElementById('txFrom');
   const toSel   = document.getElementById('txTo');
@@ -1194,13 +1469,17 @@ async function deleteAccount(id) {
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════════════════════
-function renderCatSettings() {
-  const el = document.getElementById('catList'); if(!el) return;
-  el.innerHTML = categories.map(c=>`<div class="tag">${esc(c.name)}<span class="tag-x" onclick="deleteCategory('${c.id}')">×</span></div>`).join('');
-}
+function renderCatSettings() { renderCatTree(); }
 function renderAccSettings() {
   const el = document.getElementById('accTagList'); if(!el) return;
-  el.innerHTML = accounts.map(a=>`<div class="tag">${esc(a.name)} <span style="color:var(--text3)">${a.type}</span><span class="tag-x" onclick="deleteAccount('${a.id}')">×</span></div>`).join('');
+  el.innerHTML = accounts.filter(a=>!a.is_archived).map(a=>{
+    const typeLabel = a.type==='custom'?(a.custom_type||'custom'):a.type;
+    return `<div class="tag" style="border-left:3px solid ${a.color||'var(--green)'}">
+      ${esc(a.name)} <span style="color:var(--text3)">${typeLabel}</span>
+      <span class="tag-x" onclick="openAddAccount('${a.id}')">✎</span>
+      <span class="tag-x" onclick="deleteAccount('${a.id}')">×</span>
+    </div>`;
+  }).join('');
 }
 function renderRecurSettings() {
   const el = document.getElementById('recurList'); if(!el) return;
@@ -1216,25 +1495,7 @@ function renderRecurSettings() {
     </tr>`).join('') + '</tbody></table>';
 }
 
-async function addCategory() {
-  const v = document.getElementById('newCat').value.trim();
-  if (!v) return;
-  if (categories.find(c=>c.name.toLowerCase()===v.toLowerCase())) { toast('Category exists', 'err'); return; }
-  const { data, error } = await sb.from('categories').insert({ household_id: household.id, name: v }).select().single();
-  if (error) { toast('Error: '+error.message,'err'); return; }
-  categories.push(data);
-  document.getElementById('newCat').value='';
-  renderCatSettings();
-  populateFilters();
-  toast('Category added ✓', 'ok');
-}
-
-async function deleteCategory(id) {
-  await sb.from('categories').delete().eq('id', id);
-  categories = categories.filter(c=>c.id!==id);
-  renderCatSettings();
-  populateFilters();
-}
+// addCategory/deleteCategory replaced by saveCatModal/deleteCat
 
 async function saveHHName() {
   const name = document.getElementById('hhNameInput').value.trim();
@@ -1316,7 +1577,22 @@ function closeMobileMenu() {
 // ═══════════════════════════════════════════════════════════════
 function populateFilters() {
   const fcat = document.getElementById('fCat');
-  if(fcat) fcat.innerHTML = '<option value="">All categories</option>' + categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  if(fcat) {
+    const roots = categories.filter(c=>!c.parent_id);
+    const kids  = (pid) => categories.filter(c=>c.parent_id===pid);
+    let catOpts = '<option value="">All categories</option>';
+    roots.forEach(r => {
+      const subs = kids(r.id);
+      if (subs.length) {
+        catOpts += `<optgroup label="${esc(r.name)}">`;
+        subs.forEach(s => { catOpts += `<option value="${s.id}">${esc(r.name)} › ${esc(s.name)}</option>`; });
+        catOpts += '</optgroup>';
+      } else {
+        catOpts += `<option value="${r.id}">${esc(r.name)}</option>`;
+      }
+    });
+    fcat.innerHTML = catOpts;
+  }
   const facc = document.getElementById('fAcc');
   if(facc) facc.innerHTML = '<option value="">All accounts</option>' + accounts.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
   const fp = document.getElementById('fPerson');
@@ -1379,13 +1655,35 @@ function renderCharts() {
 function renderCatChart() {
   dc('catChart');
   const ctx = document.getElementById('catChart'); if(!ctx) return;
-  const now = new Date(), m=now.getMonth(), y=now.getFullYear();
-  const d={};
-  transactions.filter(t=>{ const td=new Date(t.date+'T00:00:00'); return t.type==='spend'&&td.getMonth()===m&&td.getFullYear()===y; })
-    .forEach(t=>{ const n=categories.find(c=>c.id===t.category_id)?.name||'Other'; d[n]=(d[n]||0)+Number(t.amount); });
-  const labels=Object.keys(d),vals=Object.values(d);
-  if(!labels.length){ ctx.parentElement.innerHTML='<div class="empty" style="padding:40px">No spending this month</div>'; return; }
-  charts['catChart']=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:COLORS.slice(0,labels.length),borderWidth:0,hoverOffset:4}]},options:PO});
+  const byCat = spendByCatId();
+  let d = {}, colorMap = {};
+
+  if (analyticsView==='nature') {
+    const byN = rollupToNature(byCat);
+    d = byN;
+    Object.keys(byN).forEach(n => colorMap[n] = NATURE_COLORS[n]||'#888');
+  } else if (analyticsView==='group') {
+    const byG = rollupToGroup(byCat);
+    Object.entries(byG).forEach(([id,amt]) => {
+      const cat = categories.find(c=>c.id===id);
+      const name = cat?.name||'Other';
+      d[name] = amt;
+      colorMap[name] = cat?.color||'#888';
+    });
+  } else {
+    Object.entries(byCat).forEach(([id,amt]) => {
+      const cat = categories.find(c=>c.id===id);
+      const name = cat?.name||'Other';
+      d[name] = (d[name]||0)+amt;
+      colorMap[name] = cat?.color||'#888';
+    });
+  }
+
+  const labels=Object.keys(d), vals=Object.values(d);
+  if(!labels.length){ ctx.parentElement.innerHTML='<div class="empty" style="padding:40px">No spending this month</div>'; renderAnalyticsBreakdown(); return; }
+  const bgColors = labels.map(l=>colorMap[l]||COLORS[labels.indexOf(l)%COLORS.length]);
+  charts['catChart']=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:bgColors,borderWidth:0,hoverOffset:4}]},options:PO});
+  renderAnalyticsBreakdown();
 }
 
 function renderFlowChart() {
@@ -1513,6 +1811,768 @@ function setLoading(id, on) { const el=document.getElementById(id); if(el){ el.d
   if (cfg.url) { const el=document.getElementById('cfgUrl'); if(el) el.value=cfg.url; }
   if (cfg.key) { const el=document.getElementById('cfgKey'); if(el) el.value=cfg.key; }
 })();
+
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+const PALETTE = ['#000000','#5b5b5b','#7f8c8d','#bcbcbc','#cc0000','#fa2c1c','#d35400','#e67e22','#f37736','#f39c12','#ffd700','#ffe000','#8fce00','#6aa84f','#27ae60','#38761d','#16a085','#00ffff','#3498db','#2980b9','#16537e','#34495e','#8e44ad','#800080','#c90076','#ffb6c1','#783f04','#2D5A3D','#3D5A8A','#7A5A8A','#C8553D','#B07020'];
+
+const ICONS = ['📦','🏠','🚗','🍕','🛒','💊','👕','📚','💡','🚌','✈️','🎮','🎬','🏋️','🐾','☕','🍺','🎵','💻','📱','🏥','🎓','💰','📈','🏦','💳','🔧','🎁','🌿','⚽','🎨','🎯','🍔','🚿','🏖️','🛡️','🔑','📊','🌍','💼'];
+
+const DEFAULT_THEME = {
+  accent:'#2D5A3D', accentL:'#EAF1EC', accentM:'#4A8A5A',
+  bg:'#F7F6F2', surface:'#FFFFFF', surface2:'#F0EFE9',
+  border:'#E2E0D8', sidebar:'#FFFFFF', text:'#1A1916',
+  text2:'#6B6860', text3:'#A8A69E'
+};
+
+let currentTheme = { ...DEFAULT_THEME };
+let householdSettings = null;
+let editingAccId = null;
+
+// ═══════════════════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════════════════
+function applyTheme(theme) {
+  const t = { ...DEFAULT_THEME, ...theme };
+  const r = document.documentElement.style;
+  r.setProperty('--bg',       t.bg);
+  r.setProperty('--surface',  t.surface);
+  r.setProperty('--surface2', t.surface2);
+  r.setProperty('--border',   t.border);
+  r.setProperty('--text',     t.text);
+  r.setProperty('--text2',    t.text2);
+  r.setProperty('--text3',    t.text3);
+  r.setProperty('--green',    t.accent);
+  r.setProperty('--green-l',  t.accentL);
+  r.setProperty('--green-m',  t.accentM);
+  // sidebar bg
+  const sb = document.getElementById('sidebar');
+  if (sb) sb.style.background = t.sidebar;
+  currentTheme = t;
+}
+
+async function loadTheme() {
+  if (!household) return;
+  const { data } = await sb.from('household_settings').select('*').eq('household_id', household.id).maybeSingle();
+  householdSettings = data;
+  if (data?.theme) applyTheme(data.theme);
+}
+
+async function saveTheme() {
+  if (!household) return;
+  const payload = { household_id: household.id, theme: currentTheme, updated_at: new Date().toISOString() };
+  if (householdSettings) {
+    await sb.from('household_settings').update(payload).eq('id', householdSettings.id);
+  } else {
+    const { data } = await sb.from('household_settings').insert(payload).select().single();
+    householdSettings = data;
+  }
+  toast('Theme saved ✓', 'ok');
+}
+
+async function resetTheme() {
+  currentTheme = { ...DEFAULT_THEME };
+  applyTheme(currentTheme);
+  renderThemeEditor();
+  await saveTheme();
+}
+
+function renderThemeEditor() {
+  const el = document.getElementById('themeEditor');
+  if (!el) return;
+  const fields = [
+    { key:'accent',  label:'Accent color',  hint:'Buttons, active nav, links' },
+    { key:'bg',      label:'Background',     hint:'Page background' },
+    { key:'surface', label:'Card surface',   hint:'Cards, modals, sidebar' },
+    { key:'sidebar', label:'Sidebar color',  hint:'Navigation sidebar' },
+  ];
+  el.innerHTML = fields.map(f => `
+    <div class="theme-row">
+      <div class="theme-label">${f.label}<br><span style="font-size:10px;color:var(--text3)">${f.hint}</span></div>
+      <div class="theme-swatch-wrap">
+        ${PALETTE.map(c => `<div class="color-swatch${currentTheme[f.key]===c?' selected':''}" style="background:${c}" onclick="pickThemeColor('${f.key}','${c}',this)" title="${c}"></div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function pickThemeColor(key, color, el) {
+  currentTheme[key] = color;
+  // Derive light version for accentL
+  if (key === 'accent') {
+    currentTheme.accentM = color;
+    currentTheme.accentL = color + '22';
+  }
+  // Update selected state in that row
+  el.closest('.theme-swatch-wrap').querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  // Live preview
+  applyTheme(currentTheme);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CATEGORY MANAGER
+// ═══════════════════════════════════════════════════════════════
+function renderCatTree() {
+  const el = document.getElementById('catTree');
+  if (!el) return;
+  // Top-level categories (no parent)
+  const roots = categories.filter(c => !c.parent_id);
+  const children = (parentId) => categories.filter(c => c.parent_id === parentId);
+
+  if (!roots.length) {
+    el.innerHTML = '<div class="empty">No categories yet — add your first one</div>';
+    return;
+  }
+
+  el.innerHTML = roots.map(root => {
+    const kids = children(root.id);
+    return `<div class="cat-group">
+      <div class="cat-group-header">
+        <div class="cat-group-icon">${root.icon||'📦'}</div>
+        <div class="cat-color-dot" style="background:${root.color||'#6aa84f'}"></div>
+        <div class="cat-group-label">${esc(root.name)}</div>
+        <div class="cat-group-meta">${root.nature||''} · ${root.cat_type||''}</div>
+        <div class="cat-group-actions">
+          <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="editCat('${root.id}')">edit</button>
+          <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteCat('${root.id}')">del</button>
+          <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="addSubcat('${root.id}')">+ sub</button>
+        </div>
+      </div>
+      ${kids.length ? `<div class="cat-children">${kids.map(kid => `
+        <div class="cat-child">
+          <div class="cat-child-icon">${kid.icon||'📦'}</div>
+          <div class="cat-color-dot" style="background:${kid.color||root.color||'#6aa84f'}"></div>
+          <div class="cat-child-label">${esc(kid.name)}</div>
+          <div class="cat-child-meta">${kid.nature||''} · ${kid.cat_type||''}</div>
+          <div class="cat-child-actions">
+            <button class="btn btn-ghost" style="padding:2px 7px;font-size:11px" onclick="editCat('${kid.id}')">edit</button>
+            <button class="btn btn-danger" style="padding:2px 7px;font-size:11px" onclick="deleteCat('${kid.id}')">del</button>
+          </div>
+        </div>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openCatModal(parentId) {
+  document.getElementById('catEditId').value = '';
+  document.getElementById('catModalTitle').textContent = 'Add Category';
+  document.getElementById('catName').value = '';
+  document.getElementById('catNature').value = 'Variables';
+  document.getElementById('catType').value = 'Variable';
+  document.getElementById('catIcon').value = '📦';
+  document.getElementById('catColor').value = '#6aa84f';
+  populateCatParentSelect(parentId||'');
+  renderIconGrid();
+  renderCatPalette();
+  openModal('catModal');
+}
+
+function addSubcat(parentId) { openCatModal(parentId); }
+
+function editCat(id) {
+  const c = categories.find(x=>x.id===id);
+  if (!c) return;
+  document.getElementById('catEditId').value = id;
+  document.getElementById('catModalTitle').textContent = 'Edit Category';
+  document.getElementById('catName').value = c.name;
+  document.getElementById('catNature').value = c.nature||'Variables';
+  document.getElementById('catType').value = c.cat_type||'Variable';
+  document.getElementById('catIcon').value = c.icon||'📦';
+  document.getElementById('catColor').value = c.color||'#6aa84f';
+  populateCatParentSelect(c.parent_id||'');
+  renderIconGrid(c.icon||'📦');
+  renderCatPalette(c.color||'#6aa84f');
+  openModal('catModal');
+}
+
+function populateCatParentSelect(selectedId) {
+  const sel = document.getElementById('catParent');
+  const roots = categories.filter(c=>!c.parent_id);
+  sel.innerHTML = '<option value="">— Top level group —</option>' +
+    roots.map(c=>`<option value="${c.id}"${c.id===selectedId?' selected':''}>${esc(c.icon||'')} ${esc(c.name)}</option>`).join('');
+}
+
+function renderIconGrid(selected) {
+  const grid = document.getElementById('iconGrid');
+  if (!grid) return;
+  grid.innerHTML = ICONS.map(ic => `<div class="icon-opt${ic===(selected||document.getElementById('catIcon')?.value)?' selected':''}" onclick="selectIcon('${ic}',this)">${ic}</div>`).join('');
+}
+
+function selectIcon(icon, el) {
+  document.getElementById('catIcon').value = icon;
+  document.querySelectorAll('.icon-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function renderCatPalette(selected) {
+  const el = document.getElementById('catColorPalette');
+  if (!el) return;
+  const cur = selected || document.getElementById('catColor')?.value || '#6aa84f';
+  el.innerHTML = PALETTE.map(c=>`<div class="color-swatch${c===cur?' selected':''}" style="background:${c}" onclick="selectCatColor('${c}',this)"></div>`).join('');
+}
+
+function selectCatColor(color, el) {
+  document.getElementById('catColor').value = color;
+  document.querySelectorAll('#catColorPalette .color-swatch').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function saveCatModal() {
+  const name   = document.getElementById('catName').value.trim();
+  const editId = document.getElementById('catEditId').value;
+  if (!name) { toast('Enter a name', 'err'); return; }
+  const payload = {
+    household_id: household.id,
+    name,
+    parent_id:  document.getElementById('catParent').value || null,
+    nature:     document.getElementById('catNature').value,
+    cat_type:   document.getElementById('catType').value,
+    icon:       document.getElementById('catIcon').value,
+    color:      document.getElementById('catColor').value,
+  };
+  setLoading('catSaveBtn', true);
+  let error;
+  if (editId) {
+    ({ error } = await sb.from('categories').update(payload).eq('id', editId));
+    if (!error) { const i=categories.findIndex(c=>c.id===editId); if(i>=0) categories[i]={...categories[i],...payload,id:editId}; }
+  } else {
+    const { data, error: err } = await sb.from('categories').insert(payload).select().single();
+    error = err;
+    if (!error && data) categories.push(data);
+  }
+  setLoading('catSaveBtn', false);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  closeModal('catModal');
+  renderCatTree();
+  populateFilters();
+  populateTxDropdowns();
+  toast(editId?'Category updated ✓':'Category added ✓','ok');
+}
+
+async function deleteCat(id) {
+  const kids = categories.filter(c=>c.parent_id===id);
+  if (kids.length && !confirm('This will also delete all subcategories. Continue?')) return;
+  if (!kids.length && !confirm('Delete this category?')) return;
+  // Delete children first
+  for (const k of kids) await sb.from('categories').delete().eq('id', k.id);
+  await sb.from('categories').delete().eq('id', id);
+  categories = categories.filter(c=>c.id!==id && c.parent_id!==id);
+  renderCatTree();
+  populateFilters();
+  populateTxDropdowns();
+  toast('Deleted', 'ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACCOUNT MANAGER (ENHANCED)
+// ═══════════════════════════════════════════════════════════════
+function renderAccColorPalette(selected) {
+  const el = document.getElementById('accColorPalette');
+  if (!el) return;
+  const cur = selected || '#2D5A3D';
+  el.innerHTML = PALETTE.map(c=>`<div class="color-swatch${c===cur?' selected':''}" style="background:${c}" onclick="selectAccColor('${c}',this)"></div>`).join('');
+}
+
+function selectAccColor(color, el) {
+  document.getElementById('accColor').value = color;
+  document.querySelectorAll('#accColorPalette .color-swatch').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function toggleCustomType() {
+  const sel = document.getElementById('accType');
+  const row = document.getElementById('accCustomTypeRow');
+  if (row) row.style.display = sel.value==='custom' ? 'block' : 'none';
+}
+
+function openAddAccount(accId) {
+  editingAccId = accId || null;
+  const acc = accId ? accounts.find(a=>a.id===accId) : null;
+  document.getElementById('accModalTitle').textContent = acc ? 'Edit Account' : 'Add Account';
+  document.getElementById('accName').value = acc?.name || '';
+  document.getElementById('accOpeningBal').value = acc?.opening_balance || '0';
+  document.getElementById('accColor').value = acc?.color || '#2D5A3D';
+
+  const typeEl = document.getElementById('accType');
+  const customRow = document.getElementById('accCustomTypeRow');
+  const stdTypes = ['checking','savings','credit','cash','investment'];
+  if (acc) {
+    if (stdTypes.includes(acc.type)) {
+      typeEl.value = acc.type;
+    } else {
+      typeEl.value = 'custom';
+      document.getElementById('accCustomType').value = acc.custom_type || acc.type;
+    }
+  } else {
+    typeEl.value = 'checking';
+  }
+  if (customRow) customRow.style.display = typeEl.value==='custom' ? 'block' : 'none';
+  renderAccColorPalette(acc?.color||'#2D5A3D');
+  openModal('accModal');
+}
+
+async function saveAccount() {
+  const name    = document.getElementById('accName').value.trim();
+  const typeVal = document.getElementById('accType').value;
+  const openBal = parseFloat(document.getElementById('accOpeningBal').value)||0;
+  const color   = document.getElementById('accColor').value;
+  if (!name) { toast('Enter account name','err'); return; }
+
+  const stdTypes = ['checking','savings','credit','cash','investment'];
+  const type        = typeVal==='custom' ? 'custom' : typeVal;
+  const custom_type = typeVal==='custom' ? (document.getElementById('accCustomType').value.trim()||'custom') : null;
+
+  const payload = { household_id: household.id, name, type, custom_type, opening_balance: openBal, color };
+
+  setLoading('accSaveBtn', true);
+  let error;
+  if (editingAccId) {
+    ({ error } = await sb.from('accounts').update(payload).eq('id', editingAccId));
+    if (!error) { const i=accounts.findIndex(a=>a.id===editingAccId); if(i>=0) accounts[i]={...accounts[i],...payload,id:editingAccId}; }
+  } else {
+    const { data, error: err } = await sb.from('accounts').insert(payload).select().single();
+    error = err;
+    if (!error && data) accounts.push(data);
+  }
+  setLoading('accSaveBtn', false);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  closeModal('accModal');
+  renderAll();
+  toast(editingAccId?'Account updated ✓':'Account added ✓','ok');
+}
+
+function openAdjustModal(accId) {
+  const acc = accounts.find(a=>a.id===accId);
+  if (!acc) return;
+  document.getElementById('adjAccId').value = accId;
+  document.getElementById('adjDate').value = new Date().toISOString().split('T')[0];
+  const bal = calcBalance(accId);
+  const cur = document.getElementById('adjCurrentBal');
+  if (cur) {
+    cur.textContent = currency + fmt(bal);
+    cur.style.color = bal>=0 ? 'var(--green)' : 'var(--red)';
+  }
+  document.getElementById('adjTargetBal').value = fmt(bal).replace(/,/g,'');
+  openModal('adjModal');
+}
+
+function calcBalance(accId) {
+  const acc = accounts.find(a=>a.id===accId);
+  let bal = Number(acc?.opening_balance||0);
+  transactions.forEach(t => {
+    if (t.type==='adjustment' && t.account_id===accId) { bal += Number(t.amount); return; }
+    if (t.type==='income'     && t.account_id===accId) bal += Number(t.amount);
+    if ((t.type==='spend'||t.type==='investment') && t.account_id===accId) bal -= Number(t.amount);
+    if (t.type==='transfer') {
+      if (t.account_id===accId)    bal -= Number(t.amount);
+      if (t.to_account_id===accId) bal += Number(t.amount);
+    }
+  });
+  return bal;
+}
+
+async function saveAdjustment() {
+  const accId  = document.getElementById('adjAccId').value;
+  const target = parseFloat(document.getElementById('adjTargetBal').value);
+  const date   = document.getElementById('adjDate').value;
+  if (isNaN(target)) { toast('Enter a valid balance','err'); return; }
+  const current = calcBalance(accId);
+  const diff    = target - current;
+  if (Math.abs(diff) < 0.01) { toast('Balance is already correct','ok'); closeModal('adjModal'); return; }
+  const tx = {
+    household_id: household.id,
+    user_id:      currentUser.id,
+    date,
+    description:  'Balance adjustment',
+    amount:       Math.abs(diff),
+    type:         'adjustment',
+    account_id:   accId,
+    notes:        `Adjusted from ${currency}${fmt(current)} to ${currency}${fmt(target)}`
+  };
+  const { data, error } = await sb.from('transactions').insert(tx).select().single();
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  transactions.unshift(data);
+  closeModal('adjModal');
+  renderAll();
+  toast('Balance adjusted ✓','ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VIEW STATE
+// ═══════════════════════════════════════════════════════════════
+let dashView     = 'nature';   // nature | group | sub | all
+let txView       = 'flat';     // flat | nature | group | sub | hybrid
+let analyticsView= 'nature';   // nature | group | sub | all
+let budgetView   = 'group';    // nature | group | sub
+
+// ═══════════════════════════════════════════════════════════════
+// CATEGORY ROLLUP HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+// Get all transactions for current month, spend only
+function monthlySpend() {
+  const now = new Date(), m = now.getMonth(), y = now.getFullYear();
+  return transactions.filter(t => {
+    const d = new Date(t.date+'T00:00:00');
+    return t.type==='spend' && d.getMonth()===m && d.getFullYear()===y;
+  });
+}
+
+// Roll up spend by subcategory → { catId: amount }
+function spendByCatId(txs) {
+  const map = {};
+  (txs||monthlySpend()).forEach(t => {
+    if (t.category_id) map[t.category_id] = (map[t.category_id]||0) + Number(t.amount);
+  });
+  return map;
+}
+
+// Roll up to group level (parent) → { parentId: amount, orphanId: amount }
+function rollupToGroup(byCatId) {
+  const map = {};
+  Object.entries(byCatId).forEach(([catId, amt]) => {
+    const cat = categories.find(c=>c.id===catId);
+    const key = cat?.parent_id || catId; // use parent if exists, else self
+    map[key] = (map[key]||0) + amt;
+  });
+  return map;
+}
+
+// Roll up to nature level → { nature: amount }
+function rollupToNature(byCatId) {
+  const map = {};
+  Object.entries(byCatId).forEach(([catId, amt]) => {
+    const cat = categories.find(c=>c.id===catId);
+    // get nature from cat or its parent
+    const nature = cat?.nature || categories.find(c=>c.id===cat?.parent_id)?.nature || 'Variables';
+    map[nature] = (map[nature]||0) + amt;
+  });
+  return map;
+}
+
+// Get cat ids matching a filter for the category filter dropdown
+function catIdsForView(view) {
+  if (view==='flat') return null; // no restriction
+  if (view==='sub')  return categories.filter(c=>c.parent_id).map(c=>c.id); // only leaves
+  if (view==='group') return categories.filter(c=>!c.parent_id).map(c=>c.id); // only roots
+  return null;
+}
+
+// Nature color map
+const NATURE_COLORS = {
+  'Income':      '#2D5A3D',
+  'Essentials':  '#3D5A8A',
+  'Variables':   '#B07020',
+  'Investments': '#7A5A8A',
+  'Debt':        '#C8553D',
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD VIEW
+// ═══════════════════════════════════════════════════════════════
+function setDashView(view, el) {
+  dashView = view;
+  el.closest('.view-tabs').querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderDashCatView();
+}
+
+function renderDashCatView() {
+  const el = document.getElementById('dashCatView');
+  if (!el) return;
+  const byCat   = spendByCatId();
+  const total   = Object.values(byCat).reduce((a,b)=>a+b, 0);
+  if (!total) { el.innerHTML='<div class="empty" style="padding:24px">No spending data this month</div>'; return; }
+
+  if (dashView === 'all') {
+    el.innerHTML = renderHybridView(byCat, total, false);
+    return;
+  }
+
+  let rows = [];
+  if (dashView === 'nature') {
+    const byNature = rollupToNature(byCat);
+    rows = Object.entries(byNature).sort((a,b)=>b[1]-a[1]).map(([name,amt])=>({
+      name, amt, color: NATURE_COLORS[name]||'#888', icon:''
+    }));
+  } else if (dashView === 'group') {
+    const byGroup = rollupToGroup(byCat);
+    rows = Object.entries(byGroup).sort((a,b)=>b[1]-a[1]).map(([id,amt])=>{
+      const cat = categories.find(c=>c.id===id);
+      return { name: cat?.name||'Other', amt, color: cat?.color||'#888', icon: cat?.icon||'' };
+    });
+  } else { // sub
+    rows = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([id,amt])=>{
+      const cat = categories.find(c=>c.id===id);
+      return { name: cat?.name||'Other', amt, color: cat?.color||'#888', icon: cat?.icon||'' };
+    });
+  }
+
+  el.innerHTML = '<div style="padding:4px 0">' + rows.map(r=>`
+    <div class="dash-cat-row">
+      <div class="dash-cat-dot" style="background:${r.color}"></div>
+      <div class="dash-cat-name">${r.icon} ${esc(r.name)}</div>
+      <div class="dash-cat-bar-wrap"><div class="dash-cat-bar" style="width:${Math.min((r.amt/total)*100,100)}%;background:${r.color}"></div></div>
+      <div class="dash-cat-amt">${currency}${fmt(r.amt)}</div>
+    </div>`).join('') + '</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HYBRID / ALL VIEW RENDERER (used by dashboard + analytics)
+// ═══════════════════════════════════════════════════════════════
+function renderHybridView(byCatId, total, showTxLinks) {
+  const byNature = rollupToNature(byCatId);
+  const natures  = ['Income','Essentials','Variables','Investments','Debt'];
+
+  return natures.filter(n=>byNature[n]).map(nature => {
+    const natureAmt = byNature[nature];
+    const naturePct = total > 0 ? ((natureAmt/total)*100).toFixed(1) : '0';
+
+    // Groups within this nature
+    const groupIds = [...new Set(
+      Object.keys(byCatId).map(catId => {
+        const cat = categories.find(c=>c.id===catId);
+        return cat?.parent_id || catId;
+      }).filter(gid => {
+        const g = categories.find(c=>c.id===gid);
+        const gNature = g?.nature || 'Variables';
+        return gNature === nature;
+      })
+    )];
+
+    const groupsHtml = groupIds.map(gid => {
+      const group   = categories.find(c=>c.id===gid);
+      const byGroup = rollupToGroup(byCatId);
+      const gAmt    = byGroup[gid]||0;
+      if (!gAmt) return '';
+      const gPct    = natureAmt > 0 ? ((gAmt/natureAmt)*100).toFixed(0) : '0';
+
+      // Children of this group
+      const childIds = Object.keys(byCatId).filter(cid => {
+        const cat = categories.find(c=>c.id===cid);
+        return (cat?.parent_id===gid) || (cid===gid && !cat?.parent_id);
+      });
+
+      const childrenHtml = childIds.map(cid=>{
+        const cat  = categories.find(c=>c.id===cid);
+        const cAmt = byCatId[cid]||0;
+        const cPct = gAmt>0 ? ((cAmt/gAmt)*100).toFixed(0):0;
+        return `<div class="hv-child">
+          <span>${cat?.icon||''} ${esc(cat?.name||'Other')}</span>
+          <span><span class="hv-amount ${cAmt>=0?'amt-neg':''}">${currency}${fmt(cAmt)}</span><span class="hv-pct">${cPct}%</span></span>
+        </div>`;
+      }).join('');
+
+      return `<div class="hv-group" id="hvg-${gid}">
+        <div class="hv-group-header" onclick="toggleHvGroup('${gid}')">
+          <span><span class="hv-group-icon">${group?.icon||'📦'}</span>${esc(group?.name||'Other')}</span>
+          <span><span class="hv-amount">${currency}${fmt(gAmt)}</span><span class="hv-pct">${gPct}%</span></span>
+        </div>
+        <div class="hv-children">${childrenHtml}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="hv-nature">
+      <div class="hv-nature-header" onclick="toggleHvNature(this)" style="border-left:4px solid ${NATURE_COLORS[nature]||'#888'}">
+        <span style="display:flex;align-items:center;gap:8px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${NATURE_COLORS[nature]||'#888'};display:inline-block"></span>
+          ${nature}
+        </span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px">${currency}${fmt(natureAmt)} <span style="color:var(--text3)">${naturePct}%</span></span>
+      </div>
+      <div class="hv-nature-body">${groupsHtml||'<div class="hv-child">No subcategory data</div>'}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleHvGroup(gid) {
+  document.getElementById('hvg-'+gid)?.classList.toggle('hv-collapsed');
+}
+function toggleHvNature(el) {
+  el.nextElementSibling?.classList.toggle('hv-collapsed');
+  el.classList.toggle('hv-collapsed');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRANSACTION VIEW
+// ═══════════════════════════════════════════════════════════════
+function setTxView(view, el) {
+  txView = view;
+  el.closest('.view-tabs').querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const flat    = document.getElementById('txFlatView');
+  const grouped = document.getElementById('txGroupedView');
+  if (view==='flat') {
+    if(flat) flat.style.display='block';
+    if(grouped) grouped.style.display='none';
+    renderTxPage();
+  } else {
+    if(flat) flat.style.display='none';
+    if(grouped) grouped.style.display='block';
+    renderTxGrouped(view);
+  }
+}
+
+function renderTxGrouped(view) {
+  const el = document.getElementById('txGroupedView');
+  if (!el) return;
+
+  // Apply existing filters
+  const search = (document.getElementById('txSearch')?.value||'').toLowerCase();
+  const type   = document.getElementById('fType')?.value||'';
+  const cat    = document.getElementById('fCat')?.value||'';
+  const acc    = document.getElementById('fAcc')?.value||'';
+  const person = document.getElementById('fPerson')?.value||'';
+  const month  = document.getElementById('fMonth')?.value||'';
+
+  let txs = [...transactions];
+  if (search) txs = txs.filter(t=>(t.description+' '+(t.notes||'')).toLowerCase().includes(search));
+  if (type)   txs = txs.filter(t=>t.type===type);
+  if (cat)    txs = txs.filter(t=>t.category_id===cat);
+  if (acc)    txs = txs.filter(t=>t.account_id===acc||t.to_account_id===acc);
+  if (person) txs = txs.filter(t=>t.user_id===person);
+  if (month)  txs = txs.filter(t=>t.date.startsWith(month));
+
+  const spendTxs = txs.filter(t=>t.type==='spend');
+  const byCat    = spendByCatId(spendTxs);
+  const total    = Object.values(byCat).reduce((a,b)=>a+b,0);
+
+  if (view==='hybrid') {
+    el.innerHTML = renderHybridView(byCat, total, true);
+    return;
+  }
+
+  // Group txs into sections
+  let sections = [];
+  if (view==='nature') {
+    const byN = rollupToNature(byCat);
+    sections = Object.entries(byN).sort((a,b)=>b[1]-a[1]).map(([name,amt])=>({
+      label: name, amt,
+      color: NATURE_COLORS[name]||'#888',
+      txList: spendTxs.filter(t=>{
+        const cat = categories.find(c=>c.id===t.category_id);
+        const n   = cat?.nature || categories.find(c=>c.id===cat?.parent_id)?.nature || 'Variables';
+        return n===name;
+      })
+    }));
+  } else if (view==='group') {
+    const byG = rollupToGroup(byCat);
+    sections = Object.entries(byG).sort((a,b)=>b[1]-a[1]).map(([gid,amt])=>{
+      const g = categories.find(c=>c.id===gid);
+      return {
+        label: (g?.icon||'') + ' ' + (g?.name||'Other'), amt, color: g?.color||'#888',
+        txList: spendTxs.filter(t=>{
+          const cat = categories.find(c=>c.id===t.category_id);
+          return cat?.parent_id===gid || cat?.id===gid;
+        })
+      };
+    });
+  } else { // sub
+    sections = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([cid,amt])=>{
+      const cat = categories.find(c=>c.id===cid);
+      return {
+        label: (cat?.icon||'') + ' ' + (cat?.name||'Other'), amt, color: cat?.color||'#888',
+        txList: spendTxs.filter(t=>t.category_id===cid)
+      };
+    });
+  }
+
+  // Render sections as collapsible cards
+  el.innerHTML = sections.map((s,i) => `
+    <div class="card mb16" id="txsec-${i}">
+      <div class="card-title" style="cursor:pointer;border-left:3px solid ${s.color};padding-left:10px;margin-left:-2px" onclick="toggleTxSection(${i})">
+        <span>${esc(s.label)}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px">${currency}${fmt(s.amt)} · ${s.txList.length} txn${s.txList.length!==1?'s':''}</span>
+      </div>
+      <div id="txsec-body-${i}">
+        <table class="tbl">
+          <thead><tr><th>Date</th><th>Description</th><th>Account</th><th>By</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+          <tbody>${s.txList.map(t=>txRowCompact(t)).join('')}</tbody>
+        </table>
+      </div>
+    </div>`).join('') || '<div class="empty">No spending transactions match</div>';
+}
+
+function toggleTxSection(i) {
+  const body = document.getElementById('txsec-body-'+i);
+  if(body) body.style.display = body.style.display==='none' ? '' : 'none';
+}
+
+function txRowCompact(t) {
+  const accName = accounts.find(a=>a.id===t.account_id)?.name||'—';
+  const who     = profiles.find(p=>p.id===t.user_id)?.display_name||'—';
+  const whoColor= t.user_id===currentUser?.id?'var(--green)':'var(--blue)';
+  return `<tr data-txid="${t.id}">
+    <td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}</td>
+    <td style="font-weight:500">${esc(t.description)}</td>
+    <td style="font-size:12px;color:var(--text2)">${esc(accName)}</td>
+    <td style="font-size:12px;font-weight:500;color:${whoColor}">${esc(who)}</td>
+    <td style="text-align:right"><span class="amt-neg">${currency}${fmt(t.amount)}</span></td>
+    <td><button class="btn btn-ghost" style="padding:2px 7px;font-size:11px" onclick="editTx('${t.id}')">edit</button></td>
+  </tr>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANALYTICS VIEW
+// ═══════════════════════════════════════════════════════════════
+function setAnalyticsView(view, el) {
+  analyticsView = view;
+  el.closest('.view-tabs').querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderAnalyticsBreakdown();
+  renderCatChart();
+}
+
+function renderAnalyticsBreakdown() {
+  const el = document.getElementById('analyticsBreakdown');
+  if (!el) return;
+  const byCat = spendByCatId();
+  const total = Object.values(byCat).reduce((a,b)=>a+b,0);
+  if (!total) { el.innerHTML='<div class="empty">No data</div>'; return; }
+
+  if (analyticsView==='all') {
+    el.innerHTML = renderHybridView(byCat, total, false);
+    return;
+  }
+
+  let rows=[];
+  if (analyticsView==='nature') {
+    const byN=rollupToNature(byCat);
+    rows=Object.entries(byN).sort((a,b)=>b[1]-a[1]).map(([name,amt])=>({name,amt,color:NATURE_COLORS[name]||'#888',icon:''}));
+  } else if (analyticsView==='group') {
+    const byG=rollupToGroup(byCat);
+    rows=Object.entries(byG).sort((a,b)=>b[1]-a[1]).map(([id,amt])=>{
+      const c=categories.find(x=>x.id===id);
+      return {name:c?.name||'Other',amt,color:c?.color||'#888',icon:c?.icon||''};
+    });
+  } else {
+    rows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([id,amt])=>{
+      const c=categories.find(x=>x.id===id);
+      return {name:c?.name||'Other',amt,color:c?.color||'#888',icon:c?.icon||''};
+    });
+  }
+
+  el.innerHTML='<div style="padding:4px 0">'+rows.map(r=>`
+    <div class="dash-cat-row">
+      <div class="dash-cat-dot" style="background:${r.color}"></div>
+      <div class="dash-cat-name">${r.icon} ${esc(r.name)}</div>
+      <div class="dash-cat-bar-wrap"><div class="dash-cat-bar" style="width:${Math.min((r.amt/total)*100,100)}%;background:${r.color}"></div></div>
+      <div class="dash-cat-amt">${currency}${fmt(r.amt)}</div>
+    </div>`).join('')+'</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUDGET VIEW
+// ═══════════════════════════════════════════════════════════════
+function setBudgetView(view, el) {
+  budgetView = view;
+  el.closest('.view-tabs').querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderBudgets();
+}
 
 // ═══════════════════════════════════════════════════════════════
 // START
