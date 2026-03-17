@@ -2567,20 +2567,19 @@ async function saveCatModal() {
     default_tx_type:   document.getElementById('catDefaultTxType').value || 'spend',
   };
   setLoading('catSaveBtn', true);
-  let error, savedData;
+  let error;
   if (editId) {
-    // Include household_id in filter — helps RLS match correctly
     ({ error } = await sb.from('categories').update(payload).eq('id', editId).eq('household_id', household.id));
     if (!error) {
-      // Re-fetch to confirm what DB actually stored (detects silent RLS failures)
-      const { data: confirmed } = await sb.from('categories').select('*').eq('id', editId).maybeSingle();
-      if (confirmed) {
-        const i = categories.findIndex(c=>c.id===editId);
-        if (i>=0) categories[i] = confirmed; else categories.push(confirmed);
-      } else {
-        const i = categories.findIndex(c=>c.id===editId);
-        if (i>=0) categories[i] = {...categories[i], ...payload, id: editId};
-      }
+      // Apply payload immediately — local state always reflects what you typed
+      const i = categories.findIndex(c=>c.id===editId);
+      if (i>=0) categories[i] = {...categories[i], ...payload, id: editId};
+      // Re-fetch in background to detect silent RLS failures
+      sb.from('categories').select('name').eq('id', editId).maybeSingle().then(({ data: check }) => {
+        if (check && check.name !== name) {
+          toast('⚠ DB may not have saved — check RLS policies', 'err');
+        }
+      });
     }
   } else {
     const { data, error: err } = await sb.from('categories').insert(payload).select().single();
@@ -2676,15 +2675,15 @@ async function saveAccount() {
   if (editingAccId) {
     ({ error } = await sb.from('accounts').update(payload).eq('id', editingAccId).eq('household_id', household.id));
     if (!error) {
-      // Re-fetch to confirm what DB actually stored
-      const { data: confirmed } = await sb.from('accounts').select('*').eq('id', editingAccId).maybeSingle();
-      if (confirmed) {
-        const i = accounts.findIndex(a=>a.id===editingAccId);
-        if (i>=0) accounts[i] = confirmed; else accounts.push(confirmed);
-      } else {
-        const i = accounts.findIndex(a=>a.id===editingAccId);
-        if (i>=0) accounts[i] = {...accounts[i], ...payload, id: editingAccId};
-      }
+      // Apply payload immediately for instant UI feedback
+      const i = accounts.findIndex(a=>a.id===editingAccId);
+      if (i>=0) accounts[i] = {...accounts[i], ...payload, id: editingAccId};
+      // Background check for silent RLS failures
+      sb.from('accounts').select('name').eq('id', editingAccId).maybeSingle().then(({ data: check }) => {
+        if (check && check.name !== name) {
+          toast('⚠ DB may not have saved — check RLS policies', 'err');
+        }
+      });
     }
   } else {
     const { data, error: err } = await sb.from('accounts').insert(payload).select().single();
