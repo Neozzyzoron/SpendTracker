@@ -217,6 +217,24 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 @keyframes slideUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes spin{to{transform:rotate(360deg);}}
 
+/* ── COLUMN PICKER ── */
+.col-picker-wrap{position:relative;display:inline-block;}
+.col-picker-panel{position:absolute;top:100%;right:0;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;box-shadow:var(--sh2);min-width:200px;display:none;}
+.col-picker-panel.open{display:block;}
+.col-picker-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;cursor:pointer;user-select:none;}
+.col-picker-item input{width:14px;height:14px;accent-color:var(--green);cursor:pointer;}
+
+/* ── BULK SELECT ── */
+.tbl td.bulk-check, .tbl th.bulk-check{width:32px;padding:0 4px;}
+.bulk-cb{width:14px;height:14px;accent-color:var(--green);cursor:pointer;}
+.bulk-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--green-l);border:1px solid var(--green-m);border-radius:var(--rs);margin-bottom:8px;font-size:13px;color:var(--green);}
+.bulk-bar.show{display:flex;}
+
+/* ── RUNNING BALANCE ── */
+.run-bal{font-family:'DM Mono',monospace;font-size:12px;}
+.run-bal.pos{color:var(--green);}
+.run-bal.neg{color:var(--red);}
+
 /* ── INVITE CODE ── */
 .invite-code-display{font-family:'DM Mono',monospace;font-size:32px;font-weight:700;letter-spacing:6px;color:var(--green);padding:16px;background:var(--green-l);border:2px dashed var(--green-m);border-radius:var(--r);text-align:center;margin:12px 0;}
 
@@ -226,6 +244,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 /* ── REALTIME FLASH ── */
 @keyframes flash{0%,100%{background:transparent;}50%{background:var(--green-l);}}
 .tx-flash{animation:flash .6s ease;}
+.tx-selected td{background:var(--green-l) !important;}
 
 /* ── MOBILE ── */
 .mobile-menu-btn{display:none;position:fixed;top:12px;left:12px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:7px 9px;cursor:pointer;}
@@ -510,8 +529,18 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         <div><div class="page-title">Transactions</div><div class="page-sub" id="txCount">—</div></div>
         <div class="btn-row">
           <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV</button>
+          <div class="col-picker-wrap">
+            <button class="btn btn-ghost" onclick="toggleColPicker()" title="Choose columns">⚙ Columns</button>
+            <div class="col-picker-panel" id="colPickerPanel"></div>
+          </div>
           <button class="btn btn-primary" onclick="openAddTx()">+ Add</button>
         </div>
+      </div>
+      <!-- Bulk action bar -->
+      <div class="bulk-bar" id="bulkBar">
+        <span id="bulkCount">0 selected</span>
+        <button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="bulkDelete()">Delete selected</button>
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="clearBulkSelect()">Clear</button>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <div class="view-tabs">
@@ -532,12 +561,8 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
       </div>
       <div id="txFlatView">
         <div class="card" style="padding:0;overflow:hidden">
-          <table class="tbl">
-            <thead><tr>
-              <th style="padding:12px 10px 10px">Date</th><th>Description</th><th>Category</th>
-              <th>Type</th><th>Account</th><th>By</th><th>Notes</th>
-              <th style="text-align:right;padding-right:14px">Amount</th><th></th>
-            </tr></thead>
+          <table class="tbl" id="txTable">
+            <thead id="txHead"></thead>
             <tbody id="txBody"></tbody>
           </table>
           <div id="txEmpty" class="empty" style="display:none">No transactions match</div>
@@ -1036,6 +1061,10 @@ async function loadAllData() {
   if (budRes.data) budgets       = budRes.data;
   if (profRes.data) profiles     = profRes.data;
   if (setRes.data) { householdSettings = setRes.data; applyTheme(setRes.data.theme); }
+  // Load column preferences
+  if (profRes.data?.[0]?.preferences?.columns) {
+    visibleCols = profRes.data[0].preferences.columns;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1277,7 +1306,24 @@ function renderStats() {
   renderDashCatView();
   // Recent
   const body = document.getElementById('recentBody');
-  if (body) body.innerHTML = transactions.slice(0,7).map(t=>txRow(t,false)).join('') || '<tr><td colspan="7" class="empty" style="padding:24px">No transactions yet</td></tr>';
+  if (body) body.innerHTML = transactions.slice(0,7).map(t => {
+    const cat = categories.find(c=>c.id===t.category_id);
+    const acc = t.type==='transfer'
+      ? (accounts.find(a=>a.id===t.account_id)?.name||'?')+' → '+(accounts.find(a=>a.id===t.to_account_id)?.name||'?')
+      : accounts.find(a=>a.id===t.account_id)?.name||'—';
+    const who = profiles.find(p=>p.id===t.user_id)?.display_name||'—';
+    const cls = t.type==='income'?'amt-pos':t.type==='transfer'?'amt-neu':'amt-neg';
+    const sgn = t.type==='income'?'+':t.type==='transfer'?'±':'-';
+    return `<tr data-txid="${t.id}">
+      <td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}</td>
+      <td style="font-weight:500">${esc(t.description)}</td>
+      <td style="font-size:12px;color:var(--text2)">${cat?cat.icon+' '+cat.name:'—'}</td>
+      <td><span class="badge badge-${t.type}">${t.type}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${esc(acc)}</td>
+      <td style="font-size:12px;color:var(--text2)">${esc(who)}</td>
+      <td style="text-align:right"><span class="${cls}">${sgn}${currency}${fmt(t.amount)}</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="empty" style="padding:24px">No transactions yet</td></tr>';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1301,36 +1347,108 @@ function renderTxPage() {
 
   set('txCount', txs.length + ' transaction' + (txs.length!==1?'s':''));
   const body  = document.getElementById('txBody');
+  const head  = document.getElementById('txHead');
   const empty = document.getElementById('txEmpty');
-  if (!txs.length) { if(body) body.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if (!txs.length) { if(body) body.innerHTML=''; if(head) head.innerHTML=''; if(empty) empty.style.display='block'; return; }
   if(empty) empty.style.display='none';
-  if(body) body.innerHTML = txs.map(t=>txRow(t,true)).join('');
+
+  const cols = getVisibleCols();
+  const showRunBal = cols.includes('running_bal');
+
+  // Compute running balance per account (sorted by date asc)
+  const runBal = {};
+  if (showRunBal) {
+    const accFilter = acc || null;
+    const sorted = [...transactions].sort((a,b)=>a.date.localeCompare(b.date)||a.created_at?.localeCompare(b.created_at||'')||0);
+    sorted.forEach(t => {
+      const aids = [t.account_id, t.to_account_id].filter(Boolean);
+      aids.forEach(aid => {
+        if (accFilter && aid !== accFilter) return;
+        if (!runBal[aid]) runBal[aid] = parseFloat(accounts.find(a=>a.id===aid)?.opening_balance)||0;
+        if (t.type==='income'     && t.account_id===aid) runBal[aid] += parseFloat(t.amount)||0;
+        if ((t.type==='spend'||t.type==='investment') && t.account_id===aid) runBal[aid] -= parseFloat(t.amount)||0;
+        if (t.type==='transfer') {
+          if (t.account_id===aid)    runBal[aid] -= parseFloat(t.amount)||0;
+          if (t.to_account_id===aid) runBal[aid] += parseFloat(t.amount)||0;
+        }
+        if (t.type==='adjustment'  && t.account_id===aid) runBal[aid] += parseFloat(t.amount)||0;
+      });
+      runBal[t.id] = { ...(runBal) }; // snapshot after this tx
+    });
+  }
+
+  // Build header
+  if (head) {
+    head.innerHTML = '<tr>' +
+      '<th class="bulk-check"><input type="checkbox" id="selectAll" class="bulk-cb" onchange="toggleSelectAll(this.checked)"/></th>' +
+      (cols.includes('date')        ? '<th style="padding:12px 10px 10px">Date</th>' : '') +
+      (cols.includes('description') ? '<th>Description</th>' : '') +
+      (cols.includes('category')    ? '<th>Category</th>' : '') +
+      (cols.includes('type')        ? '<th>Type</th>' : '') +
+      (cols.includes('account')     ? '<th>Account</th>' : '') +
+      (cols.includes('person')      ? '<th>Person</th>' : '') +
+      (cols.includes('notes')       ? '<th>Notes</th>' : '') +
+      (cols.includes('recurring')   ? '<th>Recurring</th>' : '') +
+      (cols.includes('running_bal') ? '<th style="text-align:right">Balance</th>' : '') +
+      '<th style="text-align:right;padding-right:14px">Amount</th>' +
+      '<th></th></tr>';
+  }
+
+  if(body) body.innerHTML = txs.map(t => txRow(t, cols, runBal)).join('');
 }
 
-function txRow(t, actions) {
-  const catName  = categories.find(c=>c.id===t.category_id)?.name || '—';
+function txRow(t, cols, runBal) {
+  // cols: array of column ids to show (from column picker)
+  // Falls back to showing all if called from dashboard/recent
+  if (!Array.isArray(cols)) { cols = getVisibleCols(); runBal = {}; }
+
+  const cat      = categories.find(c=>c.id===t.category_id);
+  const parent   = cat?.parent_id ? categories.find(c=>c.id===cat.parent_id) : null;
+  const catLabel = parent ? parent.icon+' '+parent.name+' / '+cat.icon+' '+cat.name : (cat ? cat.icon+' '+cat.name : '—');
   const accName  = t.type === 'transfer'
     ? (accounts.find(a=>a.id===t.account_id)?.name||'?') + ' → ' + (accounts.find(a=>a.id===t.to_account_id)?.name||'?')
     : accounts.find(a=>a.id===t.account_id)?.name || '—';
-  const sign     = t.type==='income'?'+':t.type==='transfer'?'±':'-';
-  const cls      = t.type==='income'?'amt-pos':t.type==='transfer'?'amt-neu':'amt-neg';
+
+  // Signed amount display
+  const isIncome = t.type === 'income';
+  const isTransfer = t.type === 'transfer';
+  const isAdjust   = t.type === 'adjustment';
+  const signedAmt  = isIncome||isAdjust ? parseFloat(t.amount)||0 : -(parseFloat(t.amount)||0);
+  const amtCls     = isIncome ? 'amt-pos' : isTransfer ? 'amt-neu' : 'amt-neg';
+  const amtSign    = isIncome ? '+' : isTransfer ? '±' : '-';
+
   const who      = profiles.find(p=>p.id===t.user_id)?.display_name || '—';
   const whoColor = t.user_id === currentUser?.id ? 'var(--green)' : 'var(--blue)';
-  const recurBadge = t.is_recurring ? '<span class="badge badge-recurring">↻</span>' : '';
-  const actBtns  = actions ? `<td style="white-space:nowrap">
-    <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="editTx('${t.id}')">edit</button>
-    <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteTx('${t.id}')">del</button>
-  </td>` : '';
-  return `<tr data-txid="${t.id}">
-    <td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}</td>
-    <td style="font-weight:500">${esc(t.description)}${recurBadge}</td>
-    <td style="font-size:12px;color:var(--text2)">${esc(catName)}</td>
-    <td><span class="badge badge-${t.type}">${t.type}</span></td>
-    <td style="font-size:12px;color:var(--text2)">${esc(accName)}</td>
-    <td style="font-size:12px;font-weight:500;color:${whoColor}">${esc(who)}</td>
-    ${actions?`<td style="font-size:11px;color:var(--text3)">${esc(t.notes||'')}</td>`:''}
-    <td style="text-align:right"><span class="${cls}">${sign}${currency}${fmt(t.amount)}</span></td>
-    ${actBtns}
+  const recurBadge = t.is_recurring ? ' <span class="badge badge-recurring">↻</span>' : '';
+
+  // Running balance for this tx on its account
+  let runBalCell = '';
+  if (cols.includes('running_bal') && runBal) {
+    const snap = runBal[t.id];
+    const bal  = snap ? (snap[t.account_id] ?? null) : null;
+    if (bal !== null) {
+      runBalCell = `<td style="text-align:right"><span class="run-bal ${bal>=0?'pos':'neg'}">${bal>=0?'':'-'}${currency}${fmt(Math.abs(bal))}</span></td>`;
+    } else {
+      runBalCell = '<td></td>';
+    }
+  }
+
+  return `<tr data-txid="${t.id}" class="${selectedTxIds.has(t.id)?'tx-selected':''}">
+    <td class="bulk-check"><input type="checkbox" class="tx-bulk-cb bulk-cb" data-id="${t.id}" ${selectedTxIds.has(t.id)?'checked':''} onchange="toggleBulkSelect('${t.id}',this.checked)"/></td>
+    ${cols.includes('date')        ? `<td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}</td>` : ''}
+    ${cols.includes('description') ? `<td style="font-weight:500">${esc(t.description)}${recurBadge}</td>` : ''}
+    ${cols.includes('category')    ? `<td style="font-size:12px;color:var(--text2)">${esc(catLabel)}</td>` : ''}
+    ${cols.includes('type')        ? `<td><span class="badge badge-${t.type}">${t.type}</span></td>` : ''}
+    ${cols.includes('account')     ? `<td style="font-size:12px;color:var(--text2)">${esc(accName)}</td>` : ''}
+    ${cols.includes('person')      ? `<td style="font-size:12px;font-weight:500;color:${whoColor}">${esc(who)}</td>` : ''}
+    ${cols.includes('notes')       ? `<td style="font-size:11px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.notes||'')}</td>` : ''}
+    ${cols.includes('recurring')   ? `<td>${t.is_recurring?'<span class="badge badge-recurring">'+t.recur_freq+'</span>':''}</td>` : ''}
+    ${runBalCell}
+    <td style="text-align:right"><span class="${amtCls}">${amtSign}${currency}${fmt(t.amount)}</span></td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="editTx('${t.id}')">edit</button>
+      <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteTx('${t.id}')">del</button>
+    </td>
   </tr>`;
 }
 
@@ -1564,13 +1682,21 @@ function selType(type) {
     el.className = 'to';
     if (el.dataset.t === type) el.className = `to to-${type}`;
   });
-  // Show/hide transfer vs normal account fields
   const isTransfer = type === 'transfer';
+  // Account rows
   const txAccRow      = document.getElementById('txAccRow');
   const txTransferRow = document.getElementById('txTransferRow');
-  const txCatRow      = document.getElementById('txCat')?.closest('.fg2');
-  if (txAccRow)      txAccRow.style.display      = isTransfer ? 'none' : '';
-  if (txTransferRow) txTransferRow.style.display  = isTransfer ? 'block' : 'none';
+  if (txAccRow)      txAccRow.style.display     = isTransfer ? 'none' : '';
+  if (txTransferRow) txTransferRow.style.display = isTransfer ? 'block' : 'none';
+  // Hide category + recurring for transfers — they don't apply
+  const catRow   = document.getElementById('txCat')?.closest('.fg2');
+  const recurRow = document.querySelector('.recur-row');
+  if (catRow)   catRow.style.display   = isTransfer ? 'none' : '';
+  if (recurRow) recurRow.style.display = isTransfer ? 'none' : '';
+  // Auto-set description hint for transfers
+  const descEl = document.getElementById('txDesc');
+  if (descEl && isTransfer && !descEl.value) descEl.placeholder = 'e.g. Move to savings';
+  else if (descEl && !isTransfer) descEl.placeholder = 'What was this?';
 }
 
 function toggleRecur() {
@@ -1801,20 +1927,71 @@ function populateFilters() {
 // ═══════════════════════════════════════════════════════════════
 function exportCSV() {
   if (!transactions.length) { toast('No transactions', 'err'); return; }
-  const header = ['Date','Description','Amount','Type','Category','Account','To Account','Person','Notes','Recurring','Frequency'];
+
+  // Signed amount: positive for income, negative for spend/investment/transfer
+  function signedAmt(t) {
+    const n = parseFloat(t.amount) || 0;
+    if (t.type === 'income')     return n;
+    if (t.type === 'adjustment') return n;  // can be pos or neg
+    return -n;
+  }
+
+  function csvEsc(v) {
+    const s = String(v == null ? '' : v);
+    // Wrap in quotes if contains comma, quote or newline
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  const header = [
+    'Date','Description',
+    'Amount (signed)','Amount (absolute)','Currency',
+    'Type','Category Group','Category','Nature','Spending Type',
+    'Account','To Account (transfers)',
+    'Person','Notes',
+    'Recurring','Frequency','Recurring Until',
+    'Transaction ID','Created At'
+  ];
+
   const rows = transactions.map(t => {
-    const cat    = categories.find(c=>c.id===t.category_id)?.name||'';
-    const acc    = accounts.find(a=>a.id===t.account_id)?.name||'';
-    const toAcc  = accounts.find(a=>a.id===t.to_account_id)?.name||'';
-    const person = profiles.find(p=>p.id===t.user_id)?.display_name||'';
-    return [t.date,`"${t.description}"`,t.amount,t.type,cat,acc,toAcc,person,`"${t.notes||''}"`,t.is_recurring?'yes':'',t.recur_freq||''];
+    const cat      = categories.find(c=>c.id===t.category_id);
+    const parent   = cat?.parent_id ? categories.find(c=>c.id===cat.parent_id) : null;
+    const catGroup = parent?.name || (cat && !cat.parent_id ? '' : '');
+    const catName  = cat?.name || '';
+    const acc      = accounts.find(a=>a.id===t.account_id)?.name  || '';
+    const toAcc    = accounts.find(a=>a.id===t.to_account_id)?.name || '';
+    const person   = profiles.find(p=>p.id===t.user_id)?.display_name || '';
+    return [
+      t.date,
+      csvEsc(t.description),
+      signedAmt(t),
+      parseFloat(t.amount)||0,
+      currency,
+      t.type,
+      csvEsc(catGroup),
+      csvEsc(catName),
+      csvEsc(cat?.nature||''),
+      csvEsc(cat?.cat_type||''),
+      csvEsc(acc),
+      csvEsc(toAcc),
+      csvEsc(person),
+      csvEsc(t.notes||''),
+      t.is_recurring ? 'yes' : 'no',
+      t.recur_freq || '',
+      t.recur_until || '',
+      t.id,
+      t.created_at || ''
+    ].join(',');
   });
-  const csv = [header,...rows].map(r=>r.join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = `pocket-${new Date().toISOString().split('T')[0]}.csv`;
+
+  const csv = [header.join(','), ...rows].join('\n');
+  const a   = document.createElement('a');
+  a.href    = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+  a.download = `pocket-export-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
-  toast('CSV exported ✓', 'ok');
+  toast('CSV exported ✓ (' + transactions.length + ' rows)', 'ok');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2428,16 +2605,20 @@ function openAdjustModal(accId) {
   openModal('adjModal');
 }
 
-function calcBalance(accId) {
+function calcBalance(accId, upToDate) {
   const acc = accounts.find(a=>a.id===accId);
-  let bal = Number(acc?.opening_balance||0);
-  transactions.forEach(t => {
-    if (t.type==='adjustment' && t.account_id===accId) { bal += Number(t.amount); return; }
-    if (t.type==='income'     && t.account_id===accId) bal += Number(t.amount);
-    if ((t.type==='spend'||t.type==='investment') && t.account_id===accId) bal -= Number(t.amount);
+  // Explicitly parse opening_balance — can be string/null from DB
+  let bal = parseFloat(acc?.opening_balance) || 0;
+  const txs = upToDate
+    ? transactions.filter(t => t.date <= upToDate)
+    : transactions;
+  txs.forEach(t => {
+    if (t.type==='adjustment' && t.account_id===accId) { bal += parseFloat(t.amount)||0; return; }
+    if (t.type==='income'     && t.account_id===accId) bal += parseFloat(t.amount)||0;
+    if ((t.type==='spend'||t.type==='investment') && t.account_id===accId) bal -= parseFloat(t.amount)||0;
     if (t.type==='transfer') {
-      if (t.account_id===accId)    bal -= Number(t.amount);
-      if (t.to_account_id===accId) bal += Number(t.amount);
+      if (t.account_id===accId)    bal -= parseFloat(t.amount)||0;
+      if (t.to_account_id===accId) bal += parseFloat(t.amount)||0;
     }
   });
   return bal;
@@ -2711,47 +2892,61 @@ function renderDashCatView() {
 // ═══════════════════════════════════════════════════════════════
 // HYBRID / ALL VIEW RENDERER (used by dashboard + analytics)
 // ═══════════════════════════════════════════════════════════════
-function renderHybridView(byCatId, total, showTxLinks) {
+function renderHybridView(byCatId, total, txList) {
+  // txList: optional array of transactions to list under each group
+  // byCatId: spend amounts by category id
+  // We show ALL natures even if no spend — income/transfers appear as their own section
+
   const byNature = rollupToNature(byCatId);
   const natures  = ['Income','Essentials','Variables','Investments','Debt'];
+  let html = '';
 
-  return natures.filter(n=>byNature[n]).map(nature => {
-    const natureAmt = byNature[nature];
-    const naturePct = total > 0 ? ((natureAmt/total)*100).toFixed(1) : '0';
+  // ── Category-based sections (spend/investment grouped by nature) ──
+  natures.forEach(nature => {
+    const natureAmt = byNature[nature] || 0;
 
-    // Groups within this nature
+    // Collect all group ids belonging to this nature that have any data
     const groupIds = [...new Set(
       Object.keys(byCatId).map(catId => {
         const cat = categories.find(c=>c.id===catId);
         return cat?.parent_id || catId;
       }).filter(gid => {
         const g = categories.find(c=>c.id===gid);
-        const gNature = g?.nature || 'Variables';
-        return gNature === nature;
+        return (g?.nature || 'Variables') === nature;
       })
     )];
 
-    const groupsHtml = groupIds.map(gid => {
-      const group   = categories.find(c=>c.id===gid);
-      const byGroup = rollupToGroup(byCatId);
-      const gAmt    = byGroup[gid]||0;
-      if (!gAmt) return '';
-      const gPct    = natureAmt > 0 ? ((gAmt/natureAmt)*100).toFixed(0) : '0';
+    if (!groupIds.length && !natureAmt) return;
 
-      // Children of this group
+    const byGroup = rollupToGroup(byCatId);
+
+    const groupsHtml = groupIds.map(gid => {
+      const group = categories.find(c=>c.id===gid);
+      const gAmt  = byGroup[gid]||0;
+      if (!gAmt) return '';
+      const gPct  = natureAmt > 0 ? ((gAmt/natureAmt)*100).toFixed(0) : '0';
+
       const childIds = Object.keys(byCatId).filter(cid => {
         const cat = categories.find(c=>c.id===cid);
         return (cat?.parent_id===gid) || (cid===gid && !cat?.parent_id);
       });
 
-      const childrenHtml = childIds.map(cid=>{
+      const childrenHtml = childIds.map(cid => {
         const cat  = categories.find(c=>c.id===cid);
         const cAmt = byCatId[cid]||0;
-        const cPct = gAmt>0 ? ((cAmt/gAmt)*100).toFixed(0):0;
+        const cPct = gAmt>0 ? ((cAmt/gAmt)*100).toFixed(0) : 0;
+        // Optionally list transactions under each subcategory
+        const txItems = txList
+          ? txList.filter(t=>t.category_id===cid).map(t =>
+              `<div class="hv-child" style="padding-left:44px;font-size:11.5px">
+                <span style="color:var(--text3)">${fmtDate(t.date)} · ${esc(t.description)}</span>
+                <span class="hv-amount amt-neg">${currency}${fmt(t.amount)}</span>
+              </div>`).join('')
+          : '';
         return `<div class="hv-child">
           <span>${cat?.icon||''} ${esc(cat?.name||'Other')}</span>
-          <span><span class="hv-amount ${cAmt>=0?'amt-neg':''}">${currency}${fmt(cAmt)}</span><span class="hv-pct">${cPct}%</span></span>
-        </div>`;
+          <span><span class="hv-amount amt-neg">${currency}${fmt(cAmt)}</span><span class="hv-pct">${cPct}%</span></span>
+        </div>${txItems}`;
       }).join('');
 
       return `<div class="hv-group" id="hvg-${gid}">
@@ -2761,19 +2956,47 @@ function renderHybridView(byCatId, total, showTxLinks) {
         </div>
         <div class="hv-children">${childrenHtml}</div>
       </div>`;
-    }).join('');
+    }).filter(Boolean).join('');
 
-    return `<div class="hv-nature">
+    if (!groupsHtml) return;
+
+    html += `<div class="hv-nature">
       <div class="hv-nature-header" onclick="toggleHvNature(this)" style="border-left:4px solid ${NATURE_COLORS[nature]||'#888'}">
         <span style="display:flex;align-items:center;gap:8px">
           <span style="width:8px;height:8px;border-radius:50%;background:${NATURE_COLORS[nature]||'#888'};display:inline-block"></span>
           ${nature}
         </span>
-        <span style="font-family:'DM Mono',monospace;font-size:12px">${currency}${fmt(natureAmt)} <span style="color:var(--text3)">${naturePct}%</span></span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px">${currency}${fmt(natureAmt)} <span style="color:var(--text3)">${total>0?((natureAmt/total)*100).toFixed(1):'0'}%</span></span>
       </div>
-      <div class="hv-nature-body">${groupsHtml||'<div class="hv-child">No subcategory data</div>'}</div>
+      <div class="hv-nature-body">${groupsHtml}</div>
     </div>`;
-  }).join('');
+  });
+
+  // ── Transfers section (flat, no category needed) ──
+  const transfers = txList ? txList.filter(t=>t.type==='transfer') : [];
+  if (transfers.length) {
+    const transferTotal = transfers.reduce((a,t)=>a+parseFloat(t.amount),0);
+    const transferRows  = transfers.map(t => {
+      const fromAcc = accounts.find(a=>a.id===t.account_id)?.name||'?';
+      const toAcc   = accounts.find(a=>a.id===t.to_account_id)?.name||'?';
+      return `<div class="hv-child">
+        <span>${fmtDate(t.date)} · ${esc(t.description)} <span style="color:var(--text3);font-size:11px">${esc(fromAcc)} → ${esc(toAcc)}</span></span>
+        <span class="hv-amount amt-neu">${currency}${fmt(t.amount)}</span>
+      </div>`;
+    }).join('');
+    html += `<div class="hv-nature">
+      <div class="hv-nature-header" onclick="toggleHvNature(this)" style="border-left:4px solid var(--purple)">
+        <span style="display:flex;align-items:center;gap:8px">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--purple);display:inline-block"></span>
+          Transfers
+        </span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px">${currency}${fmt(transferTotal)}</span>
+      </div>
+      <div class="hv-nature-body"><div class="hv-group"><div class="hv-children">${transferRows}</div></div></div>
+    </div>`;
+  }
+
+  return html || '<div class="empty">No transactions to display</div>';
 }
 
 function toggleHvGroup(gid) {
@@ -2829,7 +3052,7 @@ function renderTxGrouped(view) {
   const total    = Object.values(byCat).reduce((a,b)=>a+b,0);
 
   if (view==='hybrid') {
-    el.innerHTML = renderHybridView(byCat, total, true);
+    el.innerHTML = renderHybridView(byCat, total, spendTxs.concat(txs.filter(t=>t.type==='transfer')));
     return;
   }
 
@@ -2893,12 +3116,14 @@ function txRowCompact(t) {
   const accName = accounts.find(a=>a.id===t.account_id)?.name||'—';
   const who     = profiles.find(p=>p.id===t.user_id)?.display_name||'—';
   const whoColor= t.user_id===currentUser?.id?'var(--green)':'var(--blue)';
+  const cls     = t.type==='income'?'amt-pos':t.type==='transfer'?'amt-neu':'amt-neg';
+  const sgn     = t.type==='income'?'+':t.type==='transfer'?'±':'-';
   return `<tr data-txid="${t.id}">
     <td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}</td>
     <td style="font-weight:500">${esc(t.description)}</td>
     <td style="font-size:12px;color:var(--text2)">${esc(accName)}</td>
     <td style="font-size:12px;font-weight:500;color:${whoColor}">${esc(who)}</td>
-    <td style="text-align:right"><span class="amt-neg">${currency}${fmt(t.amount)}</span></td>
+    <td style="text-align:right"><span class="${cls}">${sgn}${currency}${fmt(t.amount)}</span></td>
     <td><button class="btn btn-ghost" style="padding:2px 7px;font-size:11px" onclick="editTx('${t.id}')">edit</button></td>
   </tr>`;
 }
@@ -2960,6 +3185,139 @@ function setBudgetView(view, el) {
   el.closest('.view-tabs').querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   renderBudgets();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COLUMN PICKER
+// ═══════════════════════════════════════════════════════════════
+const ALL_COLUMNS = [
+  { id:'date',        label:'Date',            default:true  },
+  { id:'description', label:'Description',     default:true  },
+  { id:'category',    label:'Category',        default:true  },
+  { id:'type',        label:'Type',            default:true  },
+  { id:'account',     label:'Account',         default:true  },
+  { id:'person',      label:'Person',          default:true  },
+  { id:'notes',       label:'Notes',           default:false },
+  { id:'amount',      label:'Amount',          default:true  },
+  { id:'running_bal', label:'Running balance', default:false },
+  { id:'recurring',   label:'Recurring',       default:false },
+];
+
+let visibleCols = null;  // null = use defaults
+
+function getVisibleCols() {
+  if (visibleCols) return visibleCols;
+  // Try user preferences from profile
+  const prefs = currentProfile?.preferences?.columns;
+  if (prefs) { visibleCols = prefs; return visibleCols; }
+  // Default
+  visibleCols = ALL_COLUMNS.filter(c=>c.default).map(c=>c.id);
+  return visibleCols;
+}
+
+function toggleColPicker() {
+  const panel = document.getElementById('colPickerPanel');
+  if (!panel) return;
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) renderColPicker();
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function handler(e) {
+      if (!panel.contains(e.target) && !e.target.closest('.col-picker-wrap')) {
+        panel.classList.remove('open');
+        document.removeEventListener('click', handler);
+      }
+    });
+  }, 10);
+}
+
+function renderColPicker() {
+  const panel = document.getElementById('colPickerPanel');
+  if (!panel) return;
+  const visible = getVisibleCols();
+  panel.innerHTML = '<div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;font-">Visible columns</div>' +
+    ALL_COLUMNS.map(c => `
+      <label class="col-picker-item">
+        <input type="checkbox" ${visible.includes(c.id)?'checked':''} onchange="toggleColumn('${c.id}',this.checked)"/>
+        ${c.label}
+      </label>`).join('') +
+    '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><button class="btn btn-ghost" style="width:100%;font-size:11px;padding:4px" onclick="resetColumns()">Reset to defaults</button></div>';
+}
+
+function toggleColumn(colId, on) {
+  const cols = getVisibleCols();
+  if (on && !cols.includes(colId)) cols.push(colId);
+  else if (!on) { const i = cols.indexOf(colId); if(i>=0) cols.splice(i,1); }
+  visibleCols = cols;
+  saveColPrefs();
+  renderTxPage();
+}
+
+function resetColumns() {
+  visibleCols = ALL_COLUMNS.filter(c=>c.default).map(c=>c.id);
+  saveColPrefs();
+  renderColPicker();
+  renderTxPage();
+}
+
+async function saveColPrefs() {
+  if (!currentProfile || !sb) return;
+  const prefs = { ...(currentProfile.preferences||{}), columns: visibleCols };
+  currentProfile.preferences = prefs;
+  try {
+    await sb.from('profiles').update({ preferences: prefs }).eq('id', currentUser.id);
+  } catch(e) { console.warn('Could not save column prefs:', e); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BULK SELECT & DELETE
+// ═══════════════════════════════════════════════════════════════
+let selectedTxIds = new Set();
+
+function toggleBulkSelect(id, checked) {
+  if (checked) selectedTxIds.add(id);
+  else         selectedTxIds.delete(id);
+  updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+  document.querySelectorAll('.tx-bulk-cb').forEach(cb => {
+    cb.checked = checked;
+    if (checked) selectedTxIds.add(cb.dataset.id);
+    else         selectedTxIds.delete(cb.dataset.id);
+  });
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  const cnt = document.getElementById('bulkCount');
+  if (!bar) return;
+  if (selectedTxIds.size > 0) {
+    bar.classList.add('show');
+    if (cnt) cnt.textContent = selectedTxIds.size + ' selected';
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+function clearBulkSelect() {
+  selectedTxIds.clear();
+  document.querySelectorAll('.tx-bulk-cb, #selectAll').forEach(cb => cb.checked = false);
+  updateBulkBar();
+}
+
+async function bulkDelete() {
+  if (!selectedTxIds.size) return;
+  if (!confirm('Delete ' + selectedTxIds.size + ' transaction' + (selectedTxIds.size>1?'s':'') + '?')) return;
+  const ids = [...selectedTxIds];
+  const { error } = await sb.from('transactions').delete().in('id', ids);
+  if (error) { toast('Delete failed: ' + error.message, 'err'); return; }
+  transactions = transactions.filter(t => !ids.includes(t.id));
+  selectedTxIds.clear();
+  updateBulkBar();
+  renderAll();
+  toast('Deleted ' + ids.length + ' transaction' + (ids.length>1?'s':''), 'ok');
 }
 
 // ═══════════════════════════════════════════════════════════════
