@@ -215,6 +215,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 .toast.err{background:var(--red);}
 .toast.info{background:var(--blue);}
 @keyframes slideUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 /* ── INVITE CODE ── */
 .invite-code-display{font-family:'DM Mono',monospace;font-size:32px;font-weight:700;letter-spacing:6px;color:var(--green);padding:16px;background:var(--green-l);border:2px dashed var(--green-m);border-radius:var(--r);text-align:center;margin:12px 0;}
@@ -340,8 +341,16 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 </button>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileMenu()"></div>
 
+<!-- LOADING SCREEN — shown during session check to prevent flash -->
+<div class="screen active" id="screenLoading">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px">
+    <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px">pocket<span style="color:var(--green)">.</span></div>
+    <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite"></div>
+  </div>
+</div>
+
 <!-- AUTH SCREEN -->
-<div class="screen active" id="screenAuth">
+<div class="screen" id="screenAuth">
   <div class="auth-wrap">
     <div class="auth-box">
       <div class="auth-logo">pocket<span>.</span></div>
@@ -954,7 +963,6 @@ async function boot() {
   const ok = initSupabase();
   if (!ok) {
     showScreen('screenAuth');
-    // Show config section since no credentials are set
     const cfgEl = document.getElementById('cfgDetails');
     if (cfgEl) cfgEl.style.display = 'block';
     return;
@@ -1037,9 +1045,15 @@ function setupRealtime() {
   if (realtimeSub) sb.removeChannel(realtimeSub);
   realtimeSub = sb.channel('household-' + household.id)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions',  filter: `household_id=eq.${household.id}` }, handleRealtimeTx)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'categories',   filter: `household_id=eq.${household.id}` }, async () => { const r = await sb.from('categories').select('*').eq('household_id', household.id).order('name'); if(r.data) { categories=r.data; renderAll(); }})
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts',     filter: `household_id=eq.${household.id}` }, async () => { const r = await sb.from('accounts').select('*').eq('household_id', household.id).order('name');   if(r.data) { accounts=r.data; renderAll(); }})
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'budgets',      filter: `household_id=eq.${household.id}` }, async () => { const r = await sb.from('budgets').select('*').eq('household_id', household.id);                 if(r.data) { budgets=r.data; renderBudgets(); }})
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'categories', filter: `household_id=eq.${household.id}` }, (payload) => {
+      handleRealtimeGeneric(payload, 'categories', categories, (arr) => { categories = arr; renderCatTree(); populateFilters(); populateTxDropdowns(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts', filter: `household_id=eq.${household.id}` }, (payload) => {
+      handleRealtimeGeneric(payload, 'accounts', accounts, (arr) => { accounts = arr; renderAccounts(); renderAccSettings(); populateFilters(); populateTxDropdowns(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'budgets', filter: `household_id=eq.${household.id}` }, (payload) => {
+      handleRealtimeGeneric(payload, 'budgets', budgets, (arr) => { budgets = arr; renderBudgets(); });
+    })
     .subscribe(status => {
       setSyncState(status === 'SUBSCRIBED' ? 'live' : status === 'CHANNEL_ERROR' ? 'err' : 'ok');
     });
@@ -1059,6 +1073,24 @@ async function handleRealtimeTx(payload) {
   }
   renderAll();
   flashNewTx(payload.new?.id);
+}
+
+// Generic realtime handler — updates local array from payload directly
+// without re-fetching from DB (avoids race condition causing revert bug)
+function handleRealtimeGeneric(payload, tableName, localArr, onUpdate) {
+  let arr = [...localArr];
+  if (payload.eventType === 'INSERT') {
+    // Only add if not already present (avoid duplicates from our own saves)
+    if (!arr.find(r => r.id === payload.new.id)) arr.push(payload.new);
+    else arr = arr.map(r => r.id === payload.new.id ? payload.new : r);
+  } else if (payload.eventType === 'UPDATE') {
+    arr = arr.map(r => r.id === payload.new.id ? payload.new : r);
+    // If not found, add it
+    if (!arr.find(r => r.id === payload.new.id)) arr.push(payload.new);
+  } else if (payload.eventType === 'DELETE') {
+    arr = arr.filter(r => r.id !== payload.old.id);
+  }
+  onUpdate(arr);
 }
 
 function flashNewTx(id) {
@@ -1707,7 +1739,8 @@ function goTo(page) {
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
 }
 
 function setSyncState(state) {
