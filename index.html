@@ -875,8 +875,7 @@ const LS_CUR = 'pocket_currency';
 // Every device that opens the page will connect automatically — no setup needed.
 // The anon key is safe to include — it's public by design, RLS protects your data.
 const SUPABASE_URL = 'https://icyoamczvdqretolrdgg.supabase.co';   // e.g. 'https://abcdefgh.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljeW9hbWN6dmRxcmV0b2xyZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTE2NzAsImV4cCI6MjA4OTE2NzY3MH0.zUPIoudVSUq1aw2NzVTIJ-oCI--GIQIc0CAvazuv6a0
-';   // e.g. 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljeW9hbWN6dmRxcmV0b2xyZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTE2NzAsImV4cCI6MjA4OTE2NzY3MH0.zUPIoudVSUq1aw2NzVTIJ-oCI--GIQIc0CAvazuv6a0';   // e.g. 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 // ────────────────────────────────────────────────────────────────
 // OPTION B: Leave blank above — users enter credentials manually via ⚙ on login screen.
 // Credentials are saved to localStorage and survive logout + browser restarts.
@@ -1997,7 +1996,7 @@ function setLoading(id, on) {
 const PALETTE = ['#000000','#5b5b5b','#7f8c8d','#bcbcbc','#cc0000','#fa2c1c','#d35400','#e67e22','#f37736','#f39c12','#ffd700','#ffe000','#8fce00','#6aa84f','#27ae60','#38761d','#16a085','#00ffff','#3498db','#2980b9','#16537e','#34495e','#8e44ad','#800080','#c90076','#ffb6c1','#783f04','#2D5A3D','#3D5A8A','#7A5A8A','#C8553D','#B07020'];
 
 const ICON_GROUPS = [
-  { label: 'Family & Life',   icons: ['👶','🍼','🧸','👨‍👩‍👧','👩‍👦','🧒','👼','🎀','🪆','🧩','🎓','🏫','✏️','📐','🎒','🎠'] },
+  { label: 'Family & Life',   icons: ['👶','🍼','🧸','👪','👩','🧒','👼','🎀','🪆','🧩','🎓','🏫','✏️','📐','🎒','🎠'] },
   { label: 'Home',            icons: ['🏠','🏡','🏢','🛋️','🛏️','🚿','🛁','🪣','🧹','🔑','💡','🔌','🔧','🪛','🪚','🏗️'] },
   { label: 'Food & Drink',    icons: ['🍕','🍔','🌮','🍜','🍣','🥗','🥩','🍺','☕','🧃','🥤','🍷','🛒','🥖','🧀','🍰'] },
   { label: 'Transport',       icons: ['🚗','🚙','🚌','🚇','✈️','🚂','🛵','🚲','🛺','⛽','🅿️','🚕','🚑','🛻','⚓','🚢'] },
