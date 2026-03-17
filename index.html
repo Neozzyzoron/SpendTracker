@@ -875,7 +875,8 @@ const LS_CUR = 'pocket_currency';
 // Every device that opens the page will connect automatically — no setup needed.
 // The anon key is safe to include — it's public by design, RLS protects your data.
 const SUPABASE_URL = 'https://icyoamczvdqretolrdgg.supabase.co';   // e.g. 'https://abcdefgh.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljeW9hbWN6dmRxcmV0b2xyZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTE2NzAsImV4cCI6MjA4OTE2NzY3MH0.zUPIoudVSUq1aw2NzVTIJ-oCI--GIQIc0CAvazuv6a0';   // e.g. 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljeW9hbWN6dmRxcmV0b2xyZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTE2NzAsImV4cCI6MjA4OTE2NzY3MH0.zUPIoudVSUq1aw2NzVTIJ-oCI--GIQIc0CAvazuv6a0
+';   // e.g. 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 // ────────────────────────────────────────────────────────────────
 // OPTION B: Leave blank above — users enter credentials manually via ⚙ on login screen.
 // Credentials are saved to localStorage and survive logout + browser restarts.
@@ -978,17 +979,24 @@ async function boot() {
 }
 
 async function loadProfileAndHousehold() {
-  const { data: prof } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  // Step 1: load profile
+  const { data: prof, error: profErr } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (profErr) throw new Error('Profile load failed: ' + profErr.message);
   currentProfile = prof;
 
   if (!prof?.household_id) { showScreen('screenHousehold'); return; }
 
-  const { data: hh } = await sb.from('households').select('*').eq('id', prof.household_id).single();
+  // Step 2: load household
+  const { data: hh, error: hhErr } = await sb.from('households').select('*').eq('id', prof.household_id).single();
+  if (hhErr) throw new Error('Household load failed: ' + hhErr.message);
   household = hh;
   currency = hh?.currency || '$';
   localStorage.setItem(LS_CUR, currency);
 
+  // Step 3: load all data
   await loadAllData();
+
+  // Step 4: launch app
   setupRealtime();
   showScreen('screenApp');
   updateNavUI();
@@ -1011,12 +1019,16 @@ async function loadAllData() {
     sb.from('profiles').select('*').eq('household_id', hhId),
     sb.from('household_settings').select('*').eq('household_id', hhId).maybeSingle()
   ]);
-  if (txRes.data)   transactions     = txRes.data;
-  if (catRes.data)  categories       = catRes.data;
-  if (accRes.data)  accounts         = accRes.data;
-  if (budRes.data)  budgets          = budRes.data;
-  if (profRes.data) profiles         = profRes.data;
-  if (setRes.data)  { householdSettings = setRes.data; applyTheme(setRes.data.theme); }
+  // Log any errors but don't crash — partial data is better than nothing
+  [txRes,catRes,accRes,budRes,profRes,setRes].forEach((r,i) => {
+    if (r.error) console.warn('loadAllData query', i, 'error:', r.error.message);
+  });
+  if (txRes.data)  transactions = txRes.data;
+  if (catRes.data) categories   = catRes.data;
+  if (accRes.data) accounts     = accRes.data;
+  if (budRes.data) budgets       = budRes.data;
+  if (profRes.data) profiles     = profRes.data;
+  if (setRes.data) { householdSettings = setRes.data; applyTheme(setRes.data.theme); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1097,7 +1109,17 @@ async function doLogin() {
   setLoading('loginBtn', false);
   if (error) { errEl.textContent = error.message; errEl.style.display='block'; return; }
   currentUser = data.user;
-  await loadProfileAndHousehold();
+  errEl.textContent = 'Logged in — loading your data…';
+  errEl.style.color  = 'var(--green)';
+  errEl.style.display = 'block';
+  try {
+    await loadProfileAndHousehold();
+  } catch(e) {
+    console.error('loadProfileAndHousehold failed:', e);
+    errEl.textContent = 'Login succeeded but loading failed: ' + (e.message || e);
+    errEl.style.color  = 'var(--red)';
+    errEl.style.display = 'block';
+  }
 }
 
 async function doSignup() {
@@ -1942,6 +1964,8 @@ function setLoading(id, on) {
     if (!el.dataset.origHtml) el.dataset.origHtml = el.innerHTML;
     el.disabled = true;
     el.innerHTML = '<span style="letter-spacing:.1em">…</span>';
+    // Safety net — never leave a button stuck after 15 seconds
+    setTimeout(() => { if (el.disabled) setLoading(id, false); }, 15000);
   } else {
     el.disabled = false;
     if (el.dataset.origHtml !== undefined) {
