@@ -366,13 +366,16 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         <div id="signupErr" style="margin-top:10px;font-size:12.5px;color:var(--red);display:none"></div>
       </div>
       <!-- Supabase config -->
-      <details style="margin-top:20px">
+      <details style="margin-top:20px" id="cfgDetails">
         <summary style="font-size:12px;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace">⚙ Supabase config</summary>
         <div style="margin-top:10px">
+          <div style="background:var(--green-l);border:1px solid var(--green-m);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--green);margin-bottom:12px;line-height:1.6">
+            <strong>Tip:</strong> To avoid entering this on every device, open your <code>index.html</code> and paste your URL and key directly into the <code>SUPABASE_URL</code> and <code>SUPABASE_KEY</code> constants at the top of the script. Then re-upload to GitHub. You'll never see this screen again.
+          </div>
           <div class="fg"><label class="fl">Supabase URL</label><input class="fi" id="cfgUrl" placeholder="https://xxxx.supabase.co"/></div>
-          <div class="fg"><label class="fl">Anon key</label><input class="fi" id="cfgKey" type="password" placeholder="eyJ…"/></div>
-          <button class="btn btn-ghost" style="font-size:12px" onclick="saveSupabaseCfg()">Save &amp; reload</button>
-          <div class="f-hint" style="margin-top:8px">Find these in your Supabase project → Settings → API. They're safe to put here — the anon key is public by design and Row Level Security protects your data.</div>
+          <div class="fg"><label class="fl">Anon / publishable key</label><input class="fi" id="cfgKey" type="password" placeholder="eyJ…"/></div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveSupabaseCfg()">Save &amp; connect</button>
+          <div class="f-hint" style="margin-top:8px">Find these in Supabase → Settings → API. The anon key is public by design — Row Level Security protects your data.</div>
         </div>
       </details>
     </div>
@@ -870,17 +873,52 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 const LS_CFG = 'pocket_sb_cfg';
 const LS_CUR = 'pocket_currency';
 
+// ── OPTION A: Hardcode credentials (recommended for GitHub Pages) ──
+// Paste your Supabase URL and anon key here once, then upload to GitHub.
+// Every device that opens the page will connect automatically — no setup needed.
+// The anon key is safe to include — it's public by design, RLS protects your data.
+const SUPABASE_URL = '';   // e.g. 'https://abcdefgh.supabase.co'
+const SUPABASE_KEY = '';   // e.g. 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+// ────────────────────────────────────────────────────────────────
+// OPTION B: Leave blank above — users enter credentials manually via ⚙ on login screen.
+// Credentials are saved to localStorage and survive logout + browser restarts.
+
 function loadSbCfg() {
+  // Hardcoded values in the file take priority over localStorage
+  if (SUPABASE_URL && SUPABASE_KEY) return { url: SUPABASE_URL, key: SUPABASE_KEY };
   try { return JSON.parse(localStorage.getItem(LS_CFG)) || {}; } catch(e) { return {}; }
 }
-function saveSbCfg(cfg) { localStorage.setItem(LS_CFG, JSON.stringify(cfg)); }
+function saveSbCfg(c) {
+  localStorage.setItem(LS_CFG, JSON.stringify(c));
+}
 
 function saveSupabaseCfg() {
-  const url = document.getElementById('cfgUrl').value.trim();
-  const key = document.getElementById('cfgKey').value.trim();
-  if (!url || !key) { toast('Enter both URL and key', 'err'); return; }
+  const urlEl = document.getElementById('cfgUrl');
+  const keyEl = document.getElementById('cfgKey');
+  const url   = urlEl?.value.trim();
+  const key   = keyEl?.value.trim();
+  if (!url || !key) {
+    showAuthErr('cfgErr', 'Enter both URL and key.');
+    return;
+  }
   saveSbCfg({ url, key });
-  location.reload();
+  // Re-init Supabase with new credentials immediately
+  try {
+    sb = supabase.createClient(url, key);
+  } catch(e) {
+    showAuthErr('cfgErr', 'Invalid credentials: ' + e.message);
+    return;
+  }
+  showAuthErr('cfgErr', '');
+  toast('Credentials saved ✓', 'ok');
+  setTimeout(() => location.reload(), 700);
+}
+
+function showAuthErr(elId, msg) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
 }
 
 let sb = null;
@@ -890,7 +928,7 @@ function initSupabase() {
   try {
     sb = supabase.createClient(cfg.url, cfg.key);
     return true;
-  } catch(e) { console.error(e); return false; }
+  } catch(e) { console.error('Supabase init error:', e); return false; }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -915,7 +953,14 @@ let realtimeSub   = null;
 // ═══════════════════════════════════════════════════════════════
 async function boot() {
   const ok = initSupabase();
-  if (!ok) { showScreen('screenAuth'); return; }
+  if (!ok) {
+    showScreen('screenAuth');
+    // Auto-open config section so user knows what to do
+    setTimeout(() => {
+      document.getElementById('cfgDetails')?.setAttribute('open', '');
+    }, 100);
+    return;
+  }
 
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { showScreen('screenAuth'); return; }
@@ -1023,9 +1068,24 @@ async function doLogin() {
   const errEl = document.getElementById('loginErr');
   errEl.style.display = 'none';
   if (!email || !pw) { errEl.textContent = 'Enter email and password.'; errEl.style.display='block'; return; }
-  if (!sb) { errEl.textContent = 'Configure Supabase first (⚙ below).'; errEl.style.display='block'; return; }
+  if (!sb) {
+    // Try to init one more time in case config was just saved
+    if (!initSupabase()) {
+      errEl.innerHTML = 'Supabase not configured — open <strong>⚙ Supabase config</strong> below and save your credentials.';
+      errEl.style.display='block';
+      document.getElementById('cfgDetails')?.setAttribute('open', '');
+      return;
+    }
+  }
   setLoading('loginBtn', true);
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  let data, error;
+  try {
+    ({ data, error } = await sb.auth.signInWithPassword({ email, password: pw }));
+  } catch(e) {
+    setLoading('loginBtn', false);
+    errEl.textContent = 'Network error — check your connection.';
+    errEl.style.display='block'; return;
+  }
   setLoading('loginBtn', false);
   if (error) { errEl.textContent = error.message; errEl.style.display='block'; return; }
   currentUser = data.user;
@@ -1039,9 +1099,23 @@ async function doSignup() {
   const errEl = document.getElementById('signupErr');
   errEl.style.display = 'none';
   if (!name || !email || !pw) { errEl.textContent = 'All fields required.'; errEl.style.display='block'; return; }
-  if (!sb) { errEl.textContent = 'Configure Supabase first (⚙ below).'; errEl.style.display='block'; return; }
+  if (!sb) {
+    if (!initSupabase()) {
+      errEl.innerHTML = 'Supabase not configured — open <strong>⚙ Supabase config</strong> below and save your credentials.';
+      errEl.style.display='block';
+      document.getElementById('cfgDetails')?.setAttribute('open', '');
+      return;
+    }
+  }
   setLoading('signupBtn', true);
-  const { data, error } = await sb.auth.signUp({ email, password: pw, options: { data: { display_name: name } } });
+  let data, error;
+  try {
+    ({ data, error } = await sb.auth.signUp({ email, password: pw, options: { data: { display_name: name } } }));
+  } catch(e) {
+    setLoading('signupBtn', false);
+    errEl.textContent = 'Network error — check your connection.';
+    errEl.style.display='block'; return;
+  }
   setLoading('signupBtn', false);
   if (error) { errEl.textContent = error.message; errEl.style.display='block'; return; }
   if (data.user && !data.session) {
@@ -1867,15 +1941,38 @@ function fmtDate(s){ return new Date(s+'T00:00:00').toLocaleDateString('en-US',{
 function set(id,v) { const el=document.getElementById(id); if(el) el.textContent=v; }
 function esc(s)    { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function nameFor(uid) { return profiles.find(p=>p.id===uid)?.display_name || 'Someone'; }
-function setLoading(id, on) { const el=document.getElementById(id); if(el){ el.disabled=on; el.textContent=on?'…':el.dataset.label||el.textContent; } }
+function setLoading(id, on) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (on) {
+    if (!el.dataset.origHtml) el.dataset.origHtml = el.innerHTML;
+    el.disabled = true;
+    el.innerHTML = '<span style="letter-spacing:.1em">…</span>';
+  } else {
+    el.disabled = false;
+    if (el.dataset.origHtml !== undefined) {
+      el.innerHTML = el.dataset.origHtml;
+      delete el.dataset.origHtml;
+    }
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // PRE-FILL AUTH FORM IF CONFIG EXISTS
 // ═══════════════════════════════════════════════════════════════
 (function prefillCfg() {
   const cfg = loadSbCfg();
-  if (cfg.url) { const el=document.getElementById('cfgUrl'); if(el) el.value=cfg.url; }
-  if (cfg.key) { const el=document.getElementById('cfgKey'); if(el) el.value=cfg.key; }
+  const urlEl = document.getElementById('cfgUrl');
+  const keyEl = document.getElementById('cfgKey');
+  if (urlEl && cfg.url) urlEl.value = cfg.url;
+  if (keyEl && cfg.key) keyEl.value = cfg.key;
+  // Show a connected indicator if credentials are already saved
+  if (cfg.url && cfg.key) {
+    const hint = document.querySelector('#cfgDetails .f-hint');
+    if (hint) {
+      hint.innerHTML = '✓ Credentials saved in this browser — <span style="color:var(--green);font-weight:500">connected</span>.<br>You only need to re-enter these on a brand new device.';
+    }
+  }
 })();
 
 // ═══════════════════════════════════════════════════════════════
