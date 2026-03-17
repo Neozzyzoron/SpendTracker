@@ -2545,11 +2545,8 @@ function saveCurrentAsTemplate() {
 function manageTemplates() {
   const tpls = getTemplates();
   if (!tpls.length) { toast('No templates yet', 'err'); return; }
-  const list = tpls.map((t,i)=>`${i+1}. ${t.name}`).join('
-');
-  const del  = prompt(`Templates (enter number to delete, or cancel):
-
-${list}`);
+  const list = tpls.map((t,i) => (i+1) + '. ' + t.name).join('\n');
+  const del  = prompt('Templates (enter number to delete, or cancel):\n\n' + list);
   const idx  = parseInt(del) - 1;
   if (isNaN(idx) || idx<0 || idx>=tpls.length) return;
   tpls.splice(idx,1);
