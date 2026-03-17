@@ -342,6 +342,15 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 /* ── CAT TYPE BADGE IN DROPDOWN ── */
 .cat-type-hint{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:3px;}
 
+/* ── DRAG & DROP REORDER ── */
+.drag-handle{cursor:grab;color:var(--text3);font-size:14px;padding:0 4px;flex-shrink:0;user-select:none;line-height:1;}
+.drag-handle:hover{color:var(--text2);}
+.drag-handle:active{cursor:grabbing;}
+.cat-group.drag-over{outline:2px dashed var(--green);outline-offset:-2px;background:var(--green-l);}
+.cat-child.drag-over{outline:2px dashed var(--green);outline-offset:-2px;background:var(--green-l);}
+.acc-settings-row.drag-over td{background:var(--green-l) !important;}
+.dragging{opacity:.4;}
+
 /* ── DASHBOARD CATEGORY BREAKDOWN ── */
 .dash-cat-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
 .dash-cat-row:last-child{border-bottom:none;}
@@ -1154,14 +1163,20 @@ async function handleRealtimeTx(payload) {
 // without re-fetching from DB (avoids race condition causing revert bug)
 function handleRealtimeGeneric(payload, tableName, localArr, onUpdate) {
   let arr = [...localArr];
+  // Guard: if payload.new is missing critical fields (RLS stripping), skip the update
+  // to avoid overwriting good local state with an incomplete object
+  const n = payload.new;
+  if (payload.eventType !== 'DELETE' && n) {
+    if (!n.id) return; // completely stripped — ignore
+    if (tableName === 'categories' && !n.name) return;
+    if (tableName === 'accounts'   && !n.name) return;
+  }
   if (payload.eventType === 'INSERT') {
-    // Only add if not already present (avoid duplicates from our own saves)
-    if (!arr.find(r => r.id === payload.new.id)) arr.push(payload.new);
-    else arr = arr.map(r => r.id === payload.new.id ? payload.new : r);
+    if (!arr.find(r => r.id === n.id)) arr.push(n);
+    else arr = arr.map(r => r.id === n.id ? n : r);
   } else if (payload.eventType === 'UPDATE') {
-    arr = arr.map(r => r.id === payload.new.id ? payload.new : r);
-    // If not found, add it
-    if (!arr.find(r => r.id === payload.new.id)) arr.push(payload.new);
+    arr = arr.map(r => r.id === n.id ? n : r);
+    if (!arr.find(r => r.id === n.id)) arr.push(n);
   } else if (payload.eventType === 'DELETE') {
     arr = arr.filter(r => r.id !== payload.old.id);
   }
@@ -1511,7 +1526,7 @@ function renderAccounts() {
   if (!grid) return;
   if (!accounts.length) { grid.innerHTML='<div class="empty" style="grid-column:1/-1">No accounts yet — add one</div>'; return; }
 
-  grid.innerHTML = accounts.filter(a=>!a.is_archived).map(a => {
+  grid.innerHTML = getSortedAccounts().map(a => {
     const bal = calcBalance(a.id);
     const txCount = transactions.filter(t => t.account_id===a.id || t.to_account_id===a.id).length;
     const typeLabel = a.type==='custom' ? (a.custom_type||'custom') : a.type;
@@ -1718,7 +1733,7 @@ function populateTxDropdowns() {
     // Auto-apply default tx type when category changes
     catSel.onchange = () => applyDefaultTxType(catSel.value);
   }
-  const accOpts = accounts.filter(a=>!a.is_archived).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  const accOpts = getSortedAccounts().map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
   const accSel  = document.getElementById('txAcc');
   const fromSel = document.getElementById('txFrom');
   const toSel   = document.getElementById('txTo');
@@ -1836,19 +1851,31 @@ async function deleteAccount(id) {
 function renderCatSettings() { renderCatTree(); }
 function renderAccSettings() {
   const el = document.getElementById('accSettingsTable'); if(!el) return;
-  const active = accounts.filter(a=>!a.is_archived);
-  if (!active.length) { el.innerHTML='<div style="font-size:13px;color:var(--text3)">No accounts yet.</div>'; return; }
-  const bulkMode = el.dataset.bulkMode === '1';
+  const allActive = accounts.filter(a=>!a.is_archived);
+  // Apply saved custom order from household_settings
+  const order = householdSettings?.account_order || [];
+  const sorted = [
+    ...order.map(id => allActive.find(a=>a.id===id)).filter(Boolean),
+    ...allActive.filter(a => !order.includes(a.id))
+  ];
+  if (!sorted.length) { el.innerHTML='<div style="font-size:13px;color:var(--text3)">No accounts yet.</div>'; return; }
+  const bulkMode = accBulkMode;
   el.innerHTML = `<table class="tbl" style="margin-top:4px">
     <thead><tr>
+      <th style="width:28px"></th>
       ${bulkMode ? '<th style="width:36px"><input type="checkbox" id="accSelectAll" onchange="toggleAccSelectAll(this.checked)"/></th>' : ''}
       <th>Account</th><th>Type</th><th style="text-align:right">Opening Bal</th><th style="text-align:right">Current Bal</th><th></th>
     </tr></thead>
-    <tbody>
-    ${active.map(a => {
+    <tbody id="accSettingsTbody">
+    ${sorted.map(a => {
       const typeLabel = a.type==='custom'?(a.custom_type||'custom'):a.type;
       const bal = calcBalance(a.id);
-      return `<tr>
+      return `<tr class="acc-settings-row" data-id="${a.id}" draggable="true"
+          ondragstart="accDragStart(event,'${a.id}')"
+          ondragover="accDragOver(event,this)"
+          ondragleave="accDragLeave(this)"
+          ondrop="accDrop(event,'${a.id}')">
+        <td style="cursor:grab;color:var(--text3);font-size:16px;text-align:center" title="Drag to reorder">⠿</td>
         ${bulkMode ? `<td><input type="checkbox" class="acc-bulk-cb" data-id="${a.id}"/></td>` : ''}
         <td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${a.color||'var(--green)'}"></span><strong>${esc(a.name)}</strong></span></td>
         <td style="color:var(--text2);font-size:12px">${typeLabel}</td>
@@ -2364,21 +2391,27 @@ function pickThemeColor(key, color, el) {
 function renderCatTree() {
   const el = document.getElementById('catTree');
   if (!el) return;
-  // Top-level categories (no parent)
-  const roots = categories.filter(c => !c.parent_id);
-  const children = (parentId) => categories.filter(c => c.parent_id === parentId);
+  // Sort roots by sort_order then name
+  const roots = categories.filter(c => !c.parent_id).sort((a,b) => (a.sort_order??999) - (b.sort_order??999) || a.name.localeCompare(b.name));
+  const children = (parentId) => categories.filter(c => c.parent_id === parentId).sort((a,b) => (a.sort_order??999) - (b.sort_order??999) || a.name.localeCompare(b.name));
 
   if (!roots.length) {
     el.innerHTML = '<div class="empty">No categories yet — add your first one</div>';
     return;
   }
 
-  el.innerHTML = roots.map(root => {
+  el.innerHTML = roots.map((root, ri) => {
     const kids = children(root.id);
     const bulkCb = catBulkMode ? `<input type="checkbox" class="cat-bulk-cb" data-id="${root.id}" onchange="toggleCatSelect('${root.id}',this.checked)" style="margin-right:6px;flex-shrink:0"/>` : '';
-    return `<div class="cat-group">
+    const handle = !catBulkMode ? `<span class="drag-handle" draggable="false" title="Drag to reorder">⠿</span>` : '';
+    return `<div class="cat-group" data-id="${root.id}" data-parent=""
+        draggable="${!catBulkMode}"
+        ondragstart="catDragStart(event,'${root.id}','')"
+        ondragover="catDragOver(event,this)"
+        ondragleave="catDragLeave(this)"
+        ondrop="catDrop(event,'${root.id}','')">
       <div class="cat-group-header">
-        ${bulkCb}
+        ${handle}${bulkCb}
         <div class="cat-group-icon">${root.icon||'📦'}</div>
         <div class="cat-color-dot" style="background:${root.color||'#6aa84f'}"></div>
         <div class="cat-group-label">${esc(root.name)}</div>
@@ -2389,10 +2422,16 @@ function renderCatTree() {
           <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="addSubcat('${root.id}')">+ sub</button>
         </div>
       </div>
-      ${kids.length ? `<div class="cat-children">${kids.map(kid => {
-        const kidCb = catBulkMode ? `<input type="checkbox" class="cat-bulk-cb" data-id="${kid.id}" onchange="toggleCatSelect('${kid.id}',this.checked)" style="margin-right:6px;flex-shrink:0"/>` : '';
-        return `<div class="cat-child">
-          ${kidCb}
+      ${kids.length ? `<div class="cat-children">${kids.map((kid, ki) => {
+        const kidBulkCb = catBulkMode ? `<input type="checkbox" class="cat-bulk-cb" data-id="${kid.id}" onchange="toggleCatSelect('${kid.id}',this.checked)" style="margin-right:6px;flex-shrink:0"/>` : '';
+        const kidHandle = !catBulkMode ? `<span class="drag-handle" title="Drag to reorder">⠿</span>` : '';
+        return `<div class="cat-child" data-id="${kid.id}" data-parent="${root.id}"
+            draggable="${!catBulkMode}"
+            ondragstart="catDragStart(event,'${kid.id}','${root.id}')"
+            ondragover="catDragOver(event,this)"
+            ondragleave="catDragLeave(this)"
+            ondrop="catDrop(event,'${kid.id}','${root.id}')">
+          ${kidHandle}${kidBulkCb}
           <div class="cat-child-icon">${kid.icon||'📦'}</div>
           <div class="cat-color-dot" style="background:${kid.color||root.color||'#6aa84f'}"></div>
           <div class="cat-child-label">${esc(kid.name)}</div>
@@ -2402,8 +2441,7 @@ function renderCatTree() {
             <button class="btn btn-danger" style="padding:2px 7px;font-size:11px" onclick="deleteCat('${kid.id}')">del</button>
           </div>
         </div>`;
-      }).join('')}
-      </div>` : ''}
+      }).join('')}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -2531,9 +2569,19 @@ async function saveCatModal() {
   setLoading('catSaveBtn', true);
   let error, savedData;
   if (editId) {
-    const { data: upd, error: err } = await sb.from('categories').update(payload).eq('id', editId).select().single();
-    error = err;
-    if (!error && upd) { const i=categories.findIndex(c=>c.id===editId); if(i>=0) categories[i]=upd; else categories.push(upd); }
+    // Include household_id in filter — helps RLS match correctly
+    ({ error } = await sb.from('categories').update(payload).eq('id', editId).eq('household_id', household.id));
+    if (!error) {
+      // Re-fetch to confirm what DB actually stored (detects silent RLS failures)
+      const { data: confirmed } = await sb.from('categories').select('*').eq('id', editId).maybeSingle();
+      if (confirmed) {
+        const i = categories.findIndex(c=>c.id===editId);
+        if (i>=0) categories[i] = confirmed; else categories.push(confirmed);
+      } else {
+        const i = categories.findIndex(c=>c.id===editId);
+        if (i>=0) categories[i] = {...categories[i], ...payload, id: editId};
+      }
+    }
   } else {
     const { data, error: err } = await sb.from('categories').insert(payload).select().single();
     error = err;
@@ -2626,9 +2674,18 @@ async function saveAccount() {
   setLoading('accSaveBtn', true);
   let error;
   if (editingAccId) {
-    const { data: upd, error: err } = await sb.from('accounts').update(payload).eq('id', editingAccId).select().single();
-    error = err;
-    if (!error && upd) { const i=accounts.findIndex(a=>a.id===editingAccId); if(i>=0) accounts[i]=upd; else accounts.push(upd); }
+    ({ error } = await sb.from('accounts').update(payload).eq('id', editingAccId).eq('household_id', household.id));
+    if (!error) {
+      // Re-fetch to confirm what DB actually stored
+      const { data: confirmed } = await sb.from('accounts').select('*').eq('id', editingAccId).maybeSingle();
+      if (confirmed) {
+        const i = accounts.findIndex(a=>a.id===editingAccId);
+        if (i>=0) accounts[i] = confirmed; else accounts.push(confirmed);
+      } else {
+        const i = accounts.findIndex(a=>a.id===editingAccId);
+        if (i>=0) accounts[i] = {...accounts[i], ...payload, id: editingAccId};
+      }
+    }
   } else {
     const { data, error: err } = await sb.from('accounts').insert(payload).select().single();
     error = err;
@@ -3721,6 +3778,135 @@ document.addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════════════════════════════════
+// DRAG-TO-REORDER — CATEGORIES
+// ═══════════════════════════════════════════════════════════════
+let draggedCatId = null;
+let draggedCatParent = null;
+
+function catDragStart(e, id, parentId) {
+  draggedCatId = id;
+  draggedCatParent = parentId;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+
+function catDragOver(e, el) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const targetParent = el.dataset.parent ?? '';
+  if (targetParent === (draggedCatParent || '')) el.classList.add('drag-over');
+}
+
+function catDragLeave(el) { el.classList.remove('drag-over'); }
+
+async function catDrop(e, targetId, targetParent) {
+  e.preventDefault();
+  document.querySelectorAll('.cat-group.drag-over,.cat-child.drag-over,.dragging').forEach(el => {
+    el.classList.remove('drag-over','dragging');
+  });
+  if (!draggedCatId || draggedCatId === targetId) return;
+  if ((draggedCatParent||'') !== (targetParent||'')) { draggedCatId=null; return; }
+
+  const parentId = draggedCatParent || null;
+  const siblings = categories
+    .filter(c => (c.parent_id||null) === parentId)
+    .sort((a,b) => (a.sort_order??999)-(b.sort_order??999) || a.name.localeCompare(b.name));
+
+  const fromIdx = siblings.findIndex(c=>c.id===draggedCatId);
+  const toIdx   = siblings.findIndex(c=>c.id===targetId);
+  if (fromIdx < 0 || toIdx < 0) { draggedCatId=null; return; }
+
+  const reordered = [...siblings];
+  const [moved] = reordered.splice(fromIdx, 1);
+  reordered.splice(toIdx, 0, moved);
+
+  // Assign sort_order: 0, 10, 20…
+  reordered.forEach((c, i) => {
+    const cat = categories.find(x=>x.id===c.id);
+    if (cat) cat.sort_order = i * 10;
+  });
+  renderCatTree(); // immediate feedback
+
+  // Persist to DB
+  for (const [i, c] of reordered.entries()) {
+    await sb.from('categories').update({ sort_order: i * 10 }).eq('id', c.id).eq('household_id', household.id);
+  }
+  draggedCatId = null;
+  toast('Order saved ✓', 'ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DRAG-TO-REORDER — ACCOUNTS
+// ═══════════════════════════════════════════════════════════════
+let draggedAccId = null;
+
+function accDragStart(e, id) {
+  draggedAccId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+
+function accDragOver(e, el) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  el.classList.add('drag-over');
+}
+
+function accDragLeave(el) { el.classList.remove('drag-over'); }
+
+async function accDrop(e, targetId) {
+  e.preventDefault();
+  document.querySelectorAll('.acc-settings-row.drag-over,.acc-settings-row.dragging').forEach(el => {
+    el.classList.remove('drag-over','dragging');
+  });
+  if (!draggedAccId || draggedAccId === targetId) return;
+
+  const allActive  = accounts.filter(a=>!a.is_archived);
+  const savedOrder = householdSettings?.account_order || [];
+  const ordered = [
+    ...savedOrder.map(id => allActive.find(a=>a.id===id)).filter(Boolean),
+    ...allActive.filter(a => !savedOrder.includes(a.id))
+  ];
+
+  const fromIdx = ordered.findIndex(a=>a.id===draggedAccId);
+  const toIdx   = ordered.findIndex(a=>a.id===targetId);
+  if (fromIdx < 0 || toIdx < 0) { draggedAccId=null; return; }
+
+  const reordered = [...ordered];
+  const [moved] = reordered.splice(fromIdx, 1);
+  reordered.splice(toIdx, 0, moved);
+  const newOrder = reordered.map(a=>a.id);
+
+  // Update local state immediately
+  if (!householdSettings) householdSettings = {};
+  householdSettings.account_order = newOrder;
+  renderAccSettings();
+
+  await saveHouseholdSetting('account_order', newOrder);
+  draggedAccId = null;
+  toast('Order saved ✓', 'ok');
+}
+
+async function saveHouseholdSetting(key, value) {
+  if (!household) return;
+  const updated = { ...(householdSettings||{}), [key]: value, household_id: household.id };
+  if (householdSettings?.id) {
+    await sb.from('household_settings').update(updated).eq('id', householdSettings.id);
+  } else {
+    const { data } = await sb.from('household_settings').insert(updated).select().single();
+    if (data) householdSettings = data;
+  }
+}
+
+function getSortedAccounts() {
+  const allActive = accounts.filter(a=>!a.is_archived);
+  const order = householdSettings?.account_order || [];
+  return [
+    ...order.map(id => allActive.find(a=>a.id===id)).filter(Boolean),
+    ...allActive.filter(a => !order.includes(a.id))
+  ];
+}
+
 // ═══════════════════════════════════════════════════════════════
 boot().catch(e => {
   console.error('Boot error:', e);
