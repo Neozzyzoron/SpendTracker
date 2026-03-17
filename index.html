@@ -375,6 +375,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
           <div class="fg"><label class="fl">Supabase URL</label><input class="fi" id="cfgUrl" placeholder="https://xxxx.supabase.co"/></div>
           <div class="fg"><label class="fl">Anon / publishable key</label><input class="fi" id="cfgKey" type="password" placeholder="eyJ…"/></div>
           <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="saveSupabaseCfg()">Save &amp; connect</button>
+          <div id="cfgErr" style="margin-top:8px;font-size:12.5px;color:var(--red);display:none"></div>
           <div class="f-hint" style="margin-top:8px">Find these in Supabase → Settings → API. The anon key is public by design — Row Level Security protects your data.</div>
         </div>
       </details>
@@ -877,8 +878,8 @@ const LS_CUR = 'pocket_currency';
 // Paste your Supabase URL and anon key here once, then upload to GitHub.
 // Every device that opens the page will connect automatically — no setup needed.
 // The anon key is safe to include — it's public by design, RLS protects your data.
-const SUPABASE_URL = 'https://icyoamczvdqretolrdgg.supabase.co';   // e.g. 'https://abcdefgh.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImljeW9hbWN6dmRxcmV0b2xyZGdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1OTE2NzAsImV4cCI6MjA4OTE2NzY3MH0.zUPIoudVSUq1aw2NzVTIJ-oCI--GIQIc0CAvazuv6a0';   // e.g. 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+const SUPABASE_URL = '';   // e.g. 'https://abcdefgh.supabase.co'
+const SUPABASE_KEY = '';   // e.g. 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 // ────────────────────────────────────────────────────────────────
 // OPTION B: Leave blank above — users enter credentials manually via ⚙ on login screen.
 // Credentials are saved to localStorage and survive logout + browser restarts.
@@ -890,6 +891,13 @@ function loadSbCfg() {
 }
 function saveSbCfg(c) {
   localStorage.setItem(LS_CFG, JSON.stringify(c));
+}
+
+function showAuthErr(elId, msg) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
 }
 
 function saveSupabaseCfg() {
@@ -914,12 +922,7 @@ function saveSupabaseCfg() {
   setTimeout(() => location.reload(), 700);
 }
 
-function showAuthErr(elId, msg) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  el.textContent = msg;
-  el.style.display = msg ? 'block' : 'none';
-}
+// showAuthErr already defined above
 
 let sb = null;
 function initSupabase() {
@@ -1581,23 +1584,9 @@ async function deleteTx(id) {
 // ═══════════════════════════════════════════════════════════════
 // ACCOUNTS
 // ═══════════════════════════════════════════════════════════════
-function openAddAccount() {
-  document.getElementById('accName').value = '';
-  document.getElementById('accType').value = 'checking';
-  openModal('accModal');
-}
+// openAddAccount — see enhanced version below
 
-async function saveAccount() {
-  const name = document.getElementById('accName').value.trim();
-  const type = document.getElementById('accType').value;
-  if (!name) { toast('Enter account name', 'err'); return; }
-  const { data, error } = await sb.from('accounts').insert({ household_id: household.id, name, type }).select().single();
-  if (error) { toast('Error: ' + error.message, 'err'); return; }
-  accounts.push(data);
-  closeModal('accModal');
-  renderAll();
-  toast('Account added ✓', 'ok');
-}
+// saveAccount — enhanced version defined below
 
 async function deleteAccount(id) {
   if (!confirm('Delete this account? Transactions linked to it will lose their account.')) return;
@@ -1961,18 +1950,20 @@ function setLoading(id, on) {
 // PRE-FILL AUTH FORM IF CONFIG EXISTS
 // ═══════════════════════════════════════════════════════════════
 (function prefillCfg() {
-  const cfg = loadSbCfg();
-  const urlEl = document.getElementById('cfgUrl');
-  const keyEl = document.getElementById('cfgKey');
-  if (urlEl && cfg.url) urlEl.value = cfg.url;
-  if (keyEl && cfg.key) keyEl.value = cfg.key;
-  // Show a connected indicator if credentials are already saved
-  if (cfg.url && cfg.key) {
-    const hint = document.querySelector('#cfgDetails .f-hint');
-    if (hint) {
-      hint.innerHTML = '✓ Credentials saved in this browser — <span style="color:var(--green);font-weight:500">connected</span>.<br>You only need to re-enter these on a brand new device.';
+  try {
+    const cfg = loadSbCfg();
+    const urlEl = document.getElementById('cfgUrl');
+    const keyEl = document.getElementById('cfgKey');
+    if (urlEl && cfg.url) urlEl.value = cfg.url;
+    if (keyEl && cfg.key) keyEl.value = cfg.key;
+    // Show a connected indicator if credentials are already saved
+    if (cfg.url && cfg.key) {
+      const hint = document.querySelector('#cfgDetails .f-hint');
+      if (hint) {
+        hint.innerHTML = '✓ Credentials saved in this browser — <span style="color:var(--green);font-weight:500">connected</span>.<br>You only need to re-enter these on a brand new device.';
+      }
     }
-  }
+  } catch(e) { console.error('prefillCfg error:', e); }
 })();
 
 // ═══════════════════════════════════════════════════════════════
@@ -2920,7 +2911,11 @@ function setBudgetView(view, el) {
 // ═══════════════════════════════════════════════════════════════
 // START
 // ═══════════════════════════════════════════════════════════════
-boot();
+boot().catch(e => {
+  console.error('Boot error:', e);
+  // Fallback — show auth screen so user isn't stuck on a blank page
+  try { showScreen('screenAuth'); } catch(_) {}
+});
 </script>
 </body>
 </html>
