@@ -2954,8 +2954,6 @@ function renderHybridView(byCatId, total, txList) {
 
   // ── Category-based sections (spend/investment grouped by nature) ──
   natures.forEach(nature => {
-    const natureAmt = byNature[nature] || 0;
-
     // Collect all group ids belonging to this nature that have any data
     const groupIds = [...new Set(
       Object.keys(byCatId).map(catId => {
@@ -2970,7 +2968,7 @@ function renderHybridView(byCatId, total, txList) {
     if (!groupIds.length) return;
 
     const byGroup = rollupToGroup(byCatId);
-    // Compute natureAmt directly from the groups we're showing (avoids rollup mismatch)
+    // Compute natureAmt from groups actually shown (fixes "All" view % calculation)
     const natureAmt = groupIds.reduce((sum, gid) => sum + (byGroup[gid]||0), 0);
     if (!natureAmt) return;
 
