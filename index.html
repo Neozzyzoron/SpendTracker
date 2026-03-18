@@ -261,9 +261,10 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 .tx-card-actions{display:flex;gap:6px;margin-top:8px;}
 
 /* ── INLINE ROW EDIT (desktop) ── */
-.tx-inline-edit td{padding:4px 6px !important;background:var(--green-l) !important;}
-.tx-inline-edit .fi,.tx-inline-edit .fs{padding:4px 7px;font-size:12px;border-radius:4px;border:1px solid var(--green);background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;width:100%;min-width:0;}
+.tx-inline-edit td{padding:3px 4px !important;background:var(--green-l) !important;vertical-align:middle;}
+.tx-inline-edit .fi,.tx-inline-edit .fs{padding:4px 7px;font-size:12px;border-radius:4px;border:1px solid var(--green);background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;width:100%;min-width:0;box-sizing:border-box;}
 .tx-inline-edit .fi:focus,.tx-inline-edit .fs:focus{outline:none;box-shadow:0 0 0 2px var(--green-l);}
+.tx-inline-edit td.ie-amt input{text-align:right;font-family:'DM Mono',monospace;font-weight:600;}
 .inline-save-btn{background:var(--green);color:white;border:none;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;}
 .inline-save-btn:hover{background:#245030;}
 .inline-cancel-btn{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;}
@@ -2219,8 +2220,8 @@ function txRow(t, cols, runBal) {
     ${runBalCell}
     <td style="text-align:right"><span class="${amtCls}">${amtSign}${currency}${fmt(t.amount)}</span></td>
     <td style="white-space:nowrap">
-      ${isPending ? `<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;color:var(--green)" onclick="confirmTx('${t.id}')">✓ confirm</button>` : ''}
-      <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="editTx('${t.id}')">edit</button>
+      ${isPending ? `<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;color:var(--green)" onclick="confirmTx('${t.id}')">✓</button>` : ''}
+      <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="inlineEditTx('${t.id}')">edit</button>
       <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteTx('${t.id}')">del</button>
     </td>
   </tr>`;
@@ -2424,7 +2425,11 @@ function openAddTx(prefill) {
   openModal('txModal');
 }
 
-function editTx(id) { openEditModal(id); }
+function editTx(id) {
+  // Use inline editing on desktop, modal on mobile
+  if (window.innerWidth > 768) inlineEditTx(id);
+  else openEditModal(id);
+}
 
 function populateTxDropdowns() {
   const catSel = document.getElementById('txCat');
@@ -2540,6 +2545,10 @@ async function saveTx() {
   const todayStr  = new Date().toISOString().split('T')[0];
   const isPending = txDate > todayStr;
 
+  // Capture category — read it early before any potential DOM changes
+  const catId = document.getElementById('txCat')?.value || null;
+  if (isDebtPayment) console.log('[saveTx] debt_payment catId:', catId, 'catEl value:', document.getElementById('txCat')?.value);
+
   // Recurring template creation
   const createTpl = document.getElementById('txCreateTemplate')?.checked;
   const logNow    = createTpl ? (document.getElementById('txTplLogNow')?.checked ?? true) : true;
@@ -2547,7 +2556,7 @@ async function saveTx() {
   // If creating template only (not logging now), skip transaction insert
   if (createTpl && !logNow && !editingTxId) {
     setLoading('txSaveBtn', true);
-    await saveRecurringTemplate({ desc, amount, accId, toAccId, catId: document.getElementById('txCat')?.value||null, notes: document.getElementById('txNotes').value.trim()||null });
+    await saveRecurringTemplate({ desc, amount, accId, toAccId, catId, notes: document.getElementById('txNotes').value.trim()||null });
     setLoading('txSaveBtn', false);
     closeModal('txModal');
     renderAll();
@@ -2562,7 +2571,7 @@ async function saveTx() {
     description:   desc,
     amount:        Math.abs(amount),
     type:          selTxType,
-    category_id:   document.getElementById('txCat')?.value || null,
+    category_id:   catId,
     account_id:    accId   || null,
     to_account_id: toAccId || null,
     notes:         document.getElementById('txNotes').value.trim() || null,
@@ -2592,7 +2601,7 @@ async function saveTx() {
 
   // Also create recurring template if requested
   if (!error && createTpl && !editingTxId) {
-    const tpl = await saveRecurringTemplate({ desc, amount, accId, toAccId, catId: tx.category_id, notes: tx.notes, templateId: null });
+    const tpl = await saveRecurringTemplate({ desc, amount, accId, toAccId, catId, notes: tx.notes, templateId: null });
     // Stamp the transaction with template id
     if (tpl?.id && newTx?.id) {
       await sb.from('transactions').update({ recurring_template_id: tpl.id, recur_freq: tpl.frequency }).eq('id', newTx.id);
@@ -5392,9 +5401,176 @@ function getExpectedIncomeToDate(endDateStr) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// INLINE ROW EDITING
+// ═══════════════════════════════════════════════════════════════
+function inlineEditTx(id) {
+  // Cancel any existing inline edit first
+  const existing = document.querySelector('.tx-inline-edit');
+  if (existing) {
+    const existingId = existing.dataset.txid;
+    if (existingId === id) return; // clicking edit on already-editing row cancels
+    cancelInlineEdit();
+  }
+
+  const t = transactions.find(x=>x.id===id);
+  if (!t) return;
+
+  const row = document.querySelector(`tr[data-txid="${id}"]`);
+  if (!row) return;
+
+  row.classList.add('tx-inline-edit');
+
+  const cat       = categories.find(c=>c.id===t.category_id);
+  const isMove    = t.type==='transfer'||t.type==='withdrawal'||t.type==='investment';
+  const isDebtPay = t.type==='debt_payment';
+  const isPending = t.status==='pending' && !isEffective(t);
+
+  // Build category options
+  const roots = categories.filter(c=>!c.parent_id);
+  let catOpts = '<option value="">— no category —</option>';
+  roots.forEach(r => {
+    const subs = categories.filter(c=>c.parent_id===r.id);
+    if (subs.length) {
+      catOpts += `<optgroup label="${esc(r.icon||'')} ${esc(r.name)}">`;
+      subs.forEach(s => catOpts += `<option value="${s.id}" ${s.id===t.category_id?'selected':''}>${esc(s.icon||'')} ${esc(s.name)}</option>`);
+      catOpts += '</optgroup>';
+    } else {
+      catOpts += `<option value="${r.id}" ${r.id===t.category_id?'selected':''}>${esc(r.icon||'')} ${esc(r.name)}</option>`;
+    }
+  });
+
+  // Build account options
+  const accOpts    = getSortedAccounts().map(a=>`<option value="${a.id}" ${a.id===t.account_id?'selected':''}>${esc(a.name)}</option>`).join('');
+  const loanOpts   = accounts.filter(a=>a.type==='loan'&&!a.is_archived).map(a=>`<option value="${a.id}" ${a.id===t.to_account_id?'selected':''}>${esc(a.name)}</option>`).join('');
+  const nonLoanOpts= getSortedAccounts().filter(a=>a.type!=='loan').map(a=>`<option value="${a.id}" ${a.id===t.account_id?'selected':''}>${esc(a.name)}</option>`).join('');
+
+  const typeOpts = ['spend','income','investment','transfer','withdrawal','debt_payment','adjustment']
+    .map(tp=>`<option value="${tp}" ${tp===t.type?'selected':''}>${tp==='investment'?'invest/save':tp==='debt_payment'?'debt payment':tp}</option>`).join('');
+
+  // Account cell: varies by type
+  let accountCell = '';
+  if (isMove) {
+    const toAccOpts = getSortedAccounts().map(a=>`<option value="${a.id}" ${a.id===t.to_account_id?'selected':''}>${esc(a.name)}</option>`).join('');
+    accountCell = `<select class="fs" id="ie-from-${id}">${accOpts}</select>
+                   <span style="font-size:10px;color:var(--text3);padding:0 3px">→</span>
+                   <select class="fs" id="ie-to-${id}">${toAccOpts}</select>`;
+  } else if (isDebtPay) {
+    accountCell = `<select class="fs" id="ie-from-${id}">${nonLoanOpts}</select>
+                   <span style="font-size:10px;color:var(--text3);padding:0 3px">→</span>
+                   <select class="fs" id="ie-debt-${id}">${loanOpts}</select>`;
+  } else {
+    accountCell = `<select class="fs" id="ie-acc-${id}">${accOpts}</select>`;
+  }
+
+  // Replace each visible cell with an editable version
+  const cells = row.querySelectorAll('td');
+  const cols   = getVisibleCols();
+  let ci = 1; // skip checkbox cell (index 0)
+
+  const cellMap = {};
+  cols.forEach(col => { cellMap[col] = cells[ci++]; });
+  // actions cell is last
+  const actionsCell = cells[cells.length - 1];
+
+  if (cellMap['date'])         cellMap['date'].innerHTML         = `<input class="fi" id="ie-date-${id}" type="date" value="${t.date}" style="width:120px"/>`;
+  if (cellMap['description'])  cellMap['description'].innerHTML  = `<input class="fi" id="ie-desc-${id}" value="${esc(t.description)}" style="min-width:140px"/>`;
+  if (cellMap['category'])     cellMap['category'].innerHTML     = `<select class="fs" id="ie-cat-${id}" style="min-width:120px">${catOpts}</select>`;
+  if (cellMap['parent_group']) cellMap['parent_group'].innerHTML = `<span style="font-size:11px;color:var(--text3)">${esc(cat ? (categories.find(c=>c.id===cat.parent_id)?.name||cat.name) : '—')}</span>`;
+  if (cellMap['type'])         cellMap['type'].innerHTML         = `<select class="fs" id="ie-type-${id}">${typeOpts}</select>`;
+  if (cellMap['account'])      { cellMap['account'].style.whiteSpace='nowrap'; cellMap['account'].innerHTML = accountCell; }
+  if (cellMap['amount'])       { cellMap['amount'].className='ie-amt'; cellMap['amount'].innerHTML = `<input class="fi" id="ie-amt-${id}" type="number" step="0.01" value="${t.amount}" style="width:90px"/>`; }
+  if (cellMap['notes'])        cellMap['notes'].innerHTML        = `<input class="fi" id="ie-notes-${id}" value="${esc(t.notes||'')}" style="min-width:100px"/>`;
+  if (cellMap['person'])       {} // read-only
+  if (cellMap['nature'])       {} // derived from category
+  if (cellMap['spending_type']){}
+  if (cellMap['recurring'])    {}
+  if (cellMap['recur_freq'])   {}
+  if (cellMap['running_bal'])  {}
+
+  // Status toggle for pending
+  const statusHtml = isPending
+    ? `<select class="fs" id="ie-status-${id}" style="width:90px"><option value="pending" selected>pending</option><option value="confirmed">confirmed</option></select>`
+    : '';
+
+  actionsCell.innerHTML = `
+    <div style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap">
+      ${statusHtml}
+      <button class="inline-save-btn" onclick="saveInlineTx('${id}')">✓ save</button>
+      <button class="inline-cancel-btn" onclick="cancelInlineEdit()">✕</button>
+    </div>`;
+
+  // Focus first editable field
+  setTimeout(() => {
+    (document.getElementById(`ie-desc-${id}`) || document.getElementById(`ie-amt-${id}`))?.focus();
+  }, 30);
+
+  // Escape key cancels
+  row._ieKeyHandler = (e) => { if (e.key==='Escape') cancelInlineEdit(); if (e.key==='Enter' && !e.shiftKey) saveInlineTx(id); };
+  document.addEventListener('keydown', row._ieKeyHandler);
+}
+
+function cancelInlineEdit() {
+  const row = document.querySelector('.tx-inline-edit');
+  if (!row) return;
+  if (row._ieKeyHandler) document.removeEventListener('keydown', row._ieKeyHandler);
+  renderTxPage(); // re-render to restore original row
+}
+
+async function saveInlineTx(id) {
+  const t = transactions.find(x=>x.id===id);
+  if (!t) return;
+
+  const date  = document.getElementById(`ie-date-${id}`)?.value  || t.date;
+  const desc  = document.getElementById(`ie-desc-${id}`)?.value?.trim() || t.description;
+  const amt   = parseFloat(document.getElementById(`ie-amt-${id}`)?.value) || t.amount;
+  const catId = document.getElementById(`ie-cat-${id}`)?.value   || null;
+  const notes = document.getElementById(`ie-notes-${id}`)?.value?.trim() || null;
+  const type  = document.getElementById(`ie-type-${id}`)?.value  || t.type;
+  const statusEl = document.getElementById(`ie-status-${id}`);
+  const status = statusEl ? statusEl.value : (t.status||'confirmed');
+
+  const isMove    = type==='transfer'||type==='withdrawal'||type==='investment';
+  const isDebtPay = type==='debt_payment';
+
+  let accId = t.account_id, toAccId = t.to_account_id;
+  if (isMove) {
+    accId   = document.getElementById(`ie-from-${id}`)?.value || t.account_id;
+    toAccId = document.getElementById(`ie-to-${id}`)?.value   || t.to_account_id;
+  } else if (isDebtPay) {
+    accId   = document.getElementById(`ie-from-${id}`)?.value || t.account_id;
+    toAccId = document.getElementById(`ie-debt-${id}`)?.value || t.to_account_id;
+  } else {
+    accId   = document.getElementById(`ie-acc-${id}`)?.value  || t.account_id;
+    toAccId = null;
+  }
+
+  if (!desc) { toast('Description required', 'err'); return; }
+
+  const payload = {
+    date, description: desc, amount: Math.abs(amt), type,
+    category_id: catId || null,
+    account_id:  accId || null,
+    to_account_id: toAccId || null,
+    notes:       notes || null,
+    status,
+  };
+
+  const row = document.querySelector('.tx-inline-edit');
+  if (row?._ieKeyHandler) document.removeEventListener('keydown', row._ieKeyHandler);
+
+  const { error } = await sb.from('transactions').update(payload).eq('id', id);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+
+  const i = transactions.findIndex(x=>x.id===id);
+  if (i>=0) transactions[i] = { ...transactions[i], ...payload, id };
+
+  renderAll();
+  toast('Saved ✓','ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
 boot().catch(e => {
   console.error('Boot error:', e);
-  // Fallback — show auth screen so user isn't stuck on a blank page
   try { showScreen('screenAuth'); } catch(_) {}
 });
 </script>
