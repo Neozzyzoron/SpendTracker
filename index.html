@@ -465,6 +465,18 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 .dash-toggle.on{background:var(--green-l);border-color:var(--green);color:var(--green);}
 .dash-toggle.off{background:var(--surface2);color:var(--text3);}
 
+/* ── DASH CARD DRAG ROW ── */
+.dash-card-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface);cursor:default;}
+.dash-card-row .drag-handle{cursor:grab;font-size:14px;color:var(--text3);flex-shrink:0;}
+.dash-card-row.drag-over{outline:2px dashed var(--green);outline-offset:-2px;}
+.dash-card-row.dragging{opacity:.4;}
+.dash-card-toggle{flex:1;display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;}
+.dash-card-toggle input{accent-color:var(--green);width:15px;height:15px;cursor:pointer;}
+
+/* ── SALARY CYCLE BANNER ── */
+.cycle-banner{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--blue-l);border:1px solid var(--blue);border-radius:var(--rs);margin-bottom:12px;font-size:12px;color:var(--blue);}
+.cycle-banner strong{font-family:'DM Mono',monospace;}
+
 /* ── DASHBOARD CATEGORY BREAKDOWN ── */
 .dash-cat-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
 .dash-cat-row:last-child{border-bottom:none;}
@@ -798,6 +810,15 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
             <button class="btn btn-ghost" onclick="saveCurrency()">Save</button>
           </div>
         </div>
+        <div class="fg" style="max-width:320px">
+          <label class="fl">Salary date <span style="font-weight:400;color:var(--text3)">— day of month your salary arrives</span></label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="fi" id="salaryDayInput" type="number" min="1" max="31" placeholder="e.g. 25" style="max-width:80px"/>
+            <button class="btn btn-ghost" onclick="saveSalaryDay()">Save</button>
+            <span style="font-size:12px;color:var(--text3)" id="salaryDayHint"></span>
+          </div>
+          <div class="f-hint">Enables the Salary Cycle view on the dashboard — shows spending relative to your pay cycle.</div>
+        </div>
       </div>
 
       <!-- THEME -->
@@ -861,9 +882,57 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 <div class="overlay" id="txModal">
   <div class="modal">
     <div class="modal-title" id="txModalTitle">Add Transaction</div>
-    <!-- Quick-add templates strip (hidden when editing) -->
+    <!-- Quick-add templates strip -->
     <div id="qaStrip" style="display:none"></div>
-    <div class="fg"><label class="fl">Type</label>
+
+    <!-- 1. CATEGORY — first and prominent -->
+    <div class="fg" id="txCatRow">
+      <label class="fl">Category</label>
+      <select class="fs" id="txCat" style="font-size:14px;padding:9px 11px"></select>
+    </div>
+
+    <!-- 2. AMOUNT + DATE -->
+    <div class="fg2">
+      <div class="fg" style="margin:0"><label class="fl">Amount</label><input class="fi" id="txAmt" type="number" step="0.01" placeholder="0.00" style="font-size:18px;font-weight:600;padding:10px 11px"/></div>
+      <div class="fg" style="margin:0"><label class="fl">Date</label><input class="fi" id="txDate" type="date"/></div>
+    </div>
+
+    <!-- 3. DESCRIPTION -->
+    <div class="fg"><label class="fl">Description</label><input class="fi" id="txDesc" placeholder="What was this?"/></div>
+
+    <!-- 4. ACCOUNT ROWS — shown based on type -->
+    <div class="fg" id="txAccRow"><label class="fl">Account</label><select class="fs" id="txAcc"></select></div>
+    <div id="txTransferRow" style="display:none">
+      <div class="fg2">
+        <div class="fg" style="margin:0"><label class="fl" id="txFromLbl">From account</label><select class="fs" id="txFrom"></select></div>
+        <div class="fg" style="margin:0"><label class="fl" id="txToLbl">To account</label><select class="fs" id="txTo"></select></div>
+      </div>
+    </div>
+    <div id="txDebtRow" style="display:none">
+      <div class="fg2">
+        <div class="fg" style="margin:0"><label class="fl">Pay from account</label><select class="fs" id="txDebtFrom"></select></div>
+        <div class="fg" style="margin:0"><label class="fl">Debt account</label><select class="fs" id="txDebtAcc"></select></div>
+      </div>
+    </div>
+
+    <!-- 5. NOTES -->
+    <div class="fg"><label class="fl">Notes</label><textarea class="ft" id="txNotes" placeholder="Optional…" style="min-height:48px"></textarea></div>
+
+    <!-- 6. RECURRING -->
+    <div class="recur-row">
+      <label><input type="checkbox" id="txRecur" onchange="toggleRecur()"/> Recurring transaction</label>
+      <div id="recurFields" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;width:100%">
+        <select class="fs" id="txRecurFreq" style="flex:1">
+          <option value="daily">Daily</option><option value="weekly">Weekly</option>
+          <option value="fortnightly">Fortnightly</option><option value="monthly" selected>Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 7. TYPE OVERRIDE — secondary, at bottom -->
+    <div class="fg" style="margin-top:8px">
+      <label class="fl" style="color:var(--text3)">Transaction type <span style="font-weight:400">(auto-set by category — override if needed)</span></label>
       <div class="type-sel" style="grid-template-columns:repeat(3,1fr)">
         <div class="to" data-t="spend"        onclick="selType('spend')">spend</div>
         <div class="to" data-t="income"       onclick="selType('income')">income</div>
@@ -873,39 +942,9 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         <div class="to" data-t="debt_payment" onclick="selType('debt_payment')">debt payment</div>
       </div>
     </div>
-    <div class="fg2">
-      <div class="fg" style="margin:0"><label class="fl">Amount</label><input class="fi" id="txAmt" type="number" step="0.01" placeholder="0.00"/></div>
-      <div class="fg" style="margin:0"><label class="fl">Date</label><input class="fi" id="txDate" type="date"/></div>
-    </div>
-    <div class="fg" style="margin-top:10px"><label class="fl">Description</label><input class="fi" id="txDesc" placeholder="What was this?"/></div>
-    <div class="fg2">
-      <div class="fg" style="margin:0"><label class="fl">Category</label><select class="fs" id="txCat"></select></div>
-      <div class="fg" style="margin:0" id="txAccRow"><label class="fl">Account</label><select class="fs" id="txAcc"></select></div>
-    </div>
-    <!-- Transfer from/to accounts -->
-    <div id="txTransferRow" style="display:none">
-      <div class="fg2">
-        <div class="fg" style="margin:0"><label class="fl" id="txFromLbl">From account</label><select class="fs" id="txFrom"></select></div>
-        <div class="fg" style="margin:0"><label class="fl" id="txToLbl">To account</label><select class="fs" id="txTo"></select></div>
-      </div>
-    </div>
-    <!-- Debt payment: source account + debt account -->
-    <div id="txDebtRow" style="display:none">
-      <div class="fg2">
-        <div class="fg" style="margin:0"><label class="fl">Pay from account</label><select class="fs" id="txDebtFrom"></select></div>
-        <div class="fg" style="margin:0"><label class="fl">Debt account</label><select class="fs" id="txDebtAcc"></select></div>
-      </div>
-    </div>
-    <div class="fg" style="margin-top:2px"><label class="fl">Notes</label><textarea class="ft" id="txNotes" placeholder="Optional…"></textarea></div>
-    <!-- Recurring -->
-    <div class="recur-row">
-      <label><input type="checkbox" id="txRecur" onchange="toggleRecur()"/> Recurring transaction</label>
-      <div id="recurFields" style="display:none;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;width:100%">
-        <select class="fs" id="txRecurFreq" style="flex:1"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option><option value="monthly" selected>Monthly</option><option value="yearly">Yearly</option></select>
-      </div>
-    </div>
+
     <div class="f-actions" style="justify-content:space-between">
-      <button class="btn btn-ghost" id="txTemplateBtn" onclick="saveCurrentAsTemplate()" style="font-size:12px">★ Save as template</button>
+      <button class="btn btn-ghost" id="txTemplateBtn" onclick="saveCurrentAsTemplate()" style="font-size:12px">★ Template</button>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" onclick="closeModal('txModal')">Cancel</button>
         <button class="btn btn-primary" onclick="saveTx()" id="txSaveBtn">Save</button>
@@ -941,6 +980,11 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
       <label class="fl">Opening balance</label>
       <input class="fi" id="accOpeningBal" type="number" step="0.01" placeholder="0.00"/>
       <div class="f-hint" id="openingBalHint">The starting balance of this account. Transactions are calculated on top.</div>
+    </div>
+    <div class="fg" id="accRateRow" style="display:none">
+      <label class="fl">Expected annual return % <span style="font-weight:400;color:var(--text3)">(optional — for projections)</span></label>
+      <input class="fi" id="accExpectedRate" type="number" step="0.1" min="0" max="100" placeholder="e.g. 5"/>
+      <div class="f-hint">Used to project monthly earnings. Actual return is calculated automatically from balance adjustments.</div>
     </div>
     <div class="fg">
       <label class="fl">Account color</label>
@@ -1018,11 +1062,13 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     </div>
     <div class="fg">
       <label class="fl">Default transaction type <span style="font-weight:400;color:var(--text3)">— auto-selected when this category is picked</span></label>
-      <div class="type-sel" id="catTxTypeSel">
-        <div class="to" data-ct="spend"      onclick="selCatTxType('spend',this)">spend</div>
-        <div class="to" data-ct="income"     onclick="selCatTxType('income',this)">income</div>
-        <div class="to" data-ct="investment" onclick="selCatTxType('investment',this)">invest</div>
-        <div class="to" data-ct="transfer"   onclick="selCatTxType('transfer',this)">transfer</div>
+      <div class="type-sel" id="catTxTypeSel" style="grid-template-columns:repeat(3,1fr)">
+        <div class="to" data-ct="spend"        onclick="selCatTxType('spend',this)">spend</div>
+        <div class="to" data-ct="income"       onclick="selCatTxType('income',this)">income</div>
+        <div class="to" data-ct="investment"   onclick="selCatTxType('investment',this)">invest/save</div>
+        <div class="to" data-ct="withdrawal"   onclick="selCatTxType('withdrawal',this)">withdrawal</div>
+        <div class="to" data-ct="debt_payment" onclick="selCatTxType('debt_payment',this)">debt payment</div>
+        <div class="to" data-ct="transfer"     onclick="selCatTxType('transfer',this)">transfer</div>
       </div>
       <input type="hidden" id="catDefaultTxType" value="spend"/>
       <div class="cat-type-hint">When you pick this category in a transaction, the type switches automatically. You can always override it.</div>
@@ -1126,11 +1172,19 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 
 <!-- DASHBOARD CUSTOMISE MODAL -->
 <div class="overlay" id="dashCustomModal">
-  <div class="modal" style="width:420px">
+  <div class="modal" style="width:440px">
     <div class="modal-title">Customise Dashboard</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Choose which cards and sections appear on your dashboard. Saved per user.</div>
-    <div class="s-title" style="font-size:11px;margin-bottom:8px">Stat cards</div>
-    <div id="dashCardToggles" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px"></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Choose which cards and sections appear. Drag cards to reorder. Saved per user.</div>
+
+    <div class="s-title" style="font-size:11px;margin-bottom:6px">View cycle</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div class="dash-toggle" id="cycleMonthBtn" onclick="setCycleMode('month',this)">📅 Monthly</div>
+      <div class="dash-toggle" id="cycleSalaryBtn" onclick="setCycleMode('salary',this)">💰 Salary cycle</div>
+    </div>
+
+    <div class="s-title" style="font-size:11px;margin-bottom:8px">Stat cards — drag to reorder</div>
+    <div id="dashCardToggles" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
+
     <div class="s-title" style="font-size:11px;margin-bottom:8px">Sections</div>
     <div id="dashSectionToggles" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px"></div>
     <div class="f-actions">
@@ -1579,13 +1633,16 @@ function renderAll() {
 // DASHBOARD PREFERENCES
 // ═══════════════════════════════════════════════════════════════
 const DASH_CARDS_DEF = [
-  { id:'income',       label:'Income',           on:true  },
-  { id:'spending',     label:'Spending',          on:true  },
-  { id:'invested',     label:'Invested/Saved',    on:true  },
-  { id:'debt_payment', label:'Debt Payments',     on:false },
-  { id:'net_bal',      label:'Net Balance',       on:true  },
-  { id:'net_worth',    label:'Net Worth',         on:true  },
-  { id:'debt',         label:'Total Debt',        on:false },
+  { id:'income',        label:'Income',                on:true  },
+  { id:'spending',      label:'Spending',              on:true  },
+  { id:'invested',      label:'Invested / Saved',      on:true  },
+  { id:'debt_payment',  label:'Debt Payments',         on:false },
+  { id:'net_bal',       label:'Net Balance',           on:true  },
+  { id:'net_worth',     label:'Net Worth',             on:true  },
+  { id:'debt',          label:'Total Debt',            on:false },
+  { id:'eom_payments',  label:'Due till end of month', on:true  },
+  { id:'eom_balance',   label:'Expected EOM balance',  on:true  },
+  { id:'salary_runway', label:'Salary cycle runway',   on:false },
 ];
 const DASH_SECTIONS_DEF = [
   { id:'breakdown', label:'Spending Breakdown', on:true  },
@@ -1593,18 +1650,27 @@ const DASH_SECTIONS_DEF = [
   { id:'recent',    label:'Recent Transactions',on:true  },
 ];
 
+let dashCycleMode = 'month'; // 'month' | 'salary'
+
 function getDashPrefs() {
   const saved = currentProfile?.preferences?.dash || {};
+  // Card order: saved order or default
+  const savedOrder = saved.cardOrder || DASH_CARDS_DEF.map(c=>c.id);
+  const cardsOrdered = [
+    ...savedOrder.map(id => DASH_CARDS_DEF.find(c=>c.id===id)).filter(Boolean),
+    ...DASH_CARDS_DEF.filter(c => !savedOrder.includes(c.id))
+  ].map(c => ({ ...c, on: saved.cards?.[c.id] ?? c.on }));
   return {
-    cards:    DASH_CARDS_DEF.map(c => ({ ...c, on: saved.cards?.[c.id] ?? c.on })),
+    cards:    cardsOrdered,
     sections: DASH_SECTIONS_DEF.map(s => ({ ...s, on: saved.sections?.[s.id] ?? s.on })),
   };
 }
 
 async function saveDashPrefs(prefs) {
   const dashPref = {
-    cards:    Object.fromEntries(prefs.cards.map(c=>[c.id,c.on])),
-    sections: Object.fromEntries(prefs.sections.map(s=>[s.id,s.on])),
+    cards:     Object.fromEntries(prefs.cards.map(c=>[c.id,c.on])),
+    cardOrder: prefs.cards.map(c=>c.id),
+    sections:  Object.fromEntries(prefs.sections.map(s=>[s.id,s.on])),
   };
   const updated = { ...(currentProfile?.preferences||{}), dash: dashPref };
   currentProfile.preferences = updated;
@@ -1613,22 +1679,89 @@ async function saveDashPrefs(prefs) {
 
 function openDashCustomise() {
   const prefs = getDashPrefs();
+  // Cycle mode buttons
+  const mb = document.getElementById('cycleMonthBtn');
+  const sb2 = document.getElementById('cycleSalaryBtn');
+  const hasSalary = !!(currentProfile?.preferences?.salary_day);
+  if (mb)  mb.className  = 'dash-toggle ' + (dashCycleMode==='month'  ? 'on' : 'off');
+  if (sb2) {
+    sb2.className = 'dash-toggle ' + (dashCycleMode==='salary' ? 'on' : 'off');
+    if (!hasSalary) { sb2.style.opacity='.4'; sb2.title='Set salary date in Settings first'; }
+    else { sb2.style.opacity=''; sb2.title=''; }
+  }
+  // Draggable card rows
   const cardEl = document.getElementById('dashCardToggles');
-  const secEl  = document.getElementById('dashSectionToggles');
-  if (cardEl) cardEl.innerHTML = prefs.cards.map(c =>
-    `<div class="dash-toggle ${c.on?'on':'off'}" onclick="toggleDashItem('card','${c.id}',this)">${c.label}</div>`
-  ).join('');
+  if (cardEl) {
+    cardEl.innerHTML = prefs.cards.map(c => `
+      <div class="dash-card-row" data-id="${c.id}" draggable="true"
+        ondragstart="dashCardDragStart(event,'${c.id}')"
+        ondragover="dashCardDragOver(event,this)"
+        ondragleave="dashCardDragLeave(this)"
+        ondrop="dashCardDrop(event,'${c.id}')">
+        <span class="drag-handle">⠿</span>
+        <label class="dash-card-toggle">
+          <input type="checkbox" ${c.on?'checked':''} onchange="toggleDashCard('${c.id}',this.checked)"/>
+          ${c.label}
+        </label>
+      </div>`).join('');
+  }
+  const secEl = document.getElementById('dashSectionToggles');
   if (secEl) secEl.innerHTML = prefs.sections.map(s =>
     `<div class="dash-toggle ${s.on?'on':'off'}" onclick="toggleDashItem('section','${s.id}',this)">${s.label}</div>`
   ).join('');
   openModal('dashCustomModal');
 }
 
-async function toggleDashItem(kind, id, el) {
-  el.classList.toggle('on');
-  el.classList.toggle('off');
+async function setCycleMode(mode, el) {
+  if (mode==='salary' && !currentProfile?.preferences?.salary_day) {
+    toast('Set your salary date in Settings first', 'err'); return;
+  }
+  dashCycleMode = mode;
+  document.getElementById('cycleMonthBtn').className  = 'dash-toggle ' + (mode==='month'  ? 'on' : 'off');
+  document.getElementById('cycleSalaryBtn').className = 'dash-toggle ' + (mode==='salary' ? 'on' : 'off');
+  renderStats();
+}
+
+async function toggleDashCard(id, on) {
   const prefs = getDashPrefs();
-  const arr = kind==='card' ? prefs.cards : prefs.sections;
+  const card = prefs.cards.find(c=>c.id===id);
+  if (card) card.on = on;
+  await saveDashPrefs(prefs);
+  renderStats();
+}
+
+// Dashboard card drag-to-reorder
+let dashDragId = null;
+function dashCardDragStart(e, id) {
+  dashDragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+function dashCardDragOver(e, el) {
+  e.preventDefault();
+  el.classList.add('drag-over');
+}
+function dashCardDragLeave(el) { el.classList.remove('drag-over'); }
+async function dashCardDrop(e, targetId) {
+  e.preventDefault();
+  document.querySelectorAll('.dash-card-row').forEach(el => el.classList.remove('drag-over','dragging'));
+  if (!dashDragId || dashDragId===targetId) return;
+  const prefs = getDashPrefs();
+  const from = prefs.cards.findIndex(c=>c.id===dashDragId);
+  const to   = prefs.cards.findIndex(c=>c.id===targetId);
+  if (from<0||to<0) return;
+  const [moved] = prefs.cards.splice(from,1);
+  prefs.cards.splice(to,0,moved);
+  await saveDashPrefs(prefs);
+  openDashCustomise(); // re-render panel
+  renderStats();
+  dashDragId = null;
+}
+
+async function toggleDashItem(kind, id, el) {
+  el.classList.toggle('on'); el.classList.toggle('off');
+  const prefs = getDashPrefs();
+  const arr = kind==='section' ? prefs.sections : prefs.cards;
   const item = arr.find(x=>x.id===id);
   if (item) item.on = el.classList.contains('on');
   await saveDashPrefs(prefs);
@@ -1636,7 +1769,129 @@ async function toggleDashItem(kind, id, el) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STATS
+// SALARY CYCLE HELPERS
+// ═══════════════════════════════════════════════════════════════
+function getSalaryCycleDates() {
+  const day = parseInt(currentProfile?.preferences?.salary_day) || null;
+  if (!day) return null;
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  // Current cycle start = this month's salary date (or last month's if we haven't hit it yet)
+  let cycleStart = new Date(y, m, day);
+  if (cycleStart > now) cycleStart = new Date(y, m-1, day);
+  const cycleEnd = new Date(cycleStart.getFullYear(), cycleStart.getMonth()+1, day-1);
+  return {
+    start: cycleStart.toISOString().split('T')[0],
+    end:   cycleEnd.toISOString().split('T')[0],
+    startDate: cycleStart,
+    endDate:   cycleEnd,
+    label: `${cycleStart.toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${cycleEnd.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`,
+  };
+}
+
+function getActivePeriod() {
+  if (dashCycleMode === 'salary') {
+    const cycle = getSalaryCycleDates();
+    if (cycle) return { start: cycle.start, end: cycle.end, label: cycle.label, isSalary: true };
+  }
+  const now = new Date();
+  const m = now.getMonth(), y = now.getFullYear();
+  const start = `${y}-${String(m+1).padStart(2,'0')}-01`;
+  const lastDay = new Date(y, m+1, 0).getDate();
+  const end   = `${y}-${String(m+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+  return { start, end, label: now.toLocaleDateString('en-US',{month:'long',year:'numeric'}), isSalary: false };
+}
+
+async function saveSalaryDay() {
+  const day = parseInt(document.getElementById('salaryDayInput')?.value);
+  if (!day || day < 1 || day > 31) { toast('Enter a day between 1 and 31', 'err'); return; }
+  const prefs = { ...(currentProfile?.preferences||{}), salary_day: day };
+  currentProfile.preferences = prefs;
+  try {
+    await sb.from('profiles').update({ preferences: prefs }).eq('id', currentUser.id);
+    toast('Salary date saved ✓', 'ok');
+    const hint = document.getElementById('salaryDayHint');
+    if (hint) hint.textContent = `Day ${day} of each month`;
+  } catch(e) { toast('Error saving: '+e.message, 'err'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EOM / SALARY CYCLE PROJECTIONS
+// ═══════════════════════════════════════════════════════════════
+function getExpectedPaymentsToDate(endDateStr) {
+  const today = new Date().toISOString().split('T')[0];
+  const recurring = transactions.filter(t => t.is_recurring);
+  let total = 0, items = [];
+  recurring.forEach(tmpl => {
+    if (tmpl.type === 'income') return; // only outflows
+    let checkDate = nextDueDate(tmpl.recur_freq, tmpl.date);
+    let safetyBreak = 0;
+    while (checkDate && checkDate > today && checkDate <= endDateStr && safetyBreak++ < 60) {
+      const alreadyLogged = transactions.some(t =>
+        !t.is_recurring && t.description === tmpl.description &&
+        t.account_id === tmpl.account_id && t.date === checkDate
+      );
+      if (!alreadyLogged) {
+        total += Number(tmpl.amount);
+        items.push({ desc: tmpl.description, amt: Number(tmpl.amount), date: checkDate, type: tmpl.type });
+      }
+      checkDate = nextDueDate(tmpl.recur_freq, checkDate);
+    }
+  });
+  return { total, items };
+}
+
+function getExpectedIncomeToDate(endDateStr) {
+  const today = new Date().toISOString().split('T')[0];
+  const recurring = transactions.filter(t => t.is_recurring && t.type === 'income');
+  let total = 0;
+  recurring.forEach(tmpl => {
+    let checkDate = nextDueDate(tmpl.recur_freq, tmpl.date);
+    let safetyBreak = 0;
+    while (checkDate && checkDate > today && checkDate <= endDateStr && safetyBreak++ < 60) {
+      const alreadyLogged = transactions.some(t =>
+        !t.is_recurring && t.description === tmpl.description && t.date === checkDate
+      );
+      if (!alreadyLogged) total += Number(tmpl.amount);
+      checkDate = nextDueDate(tmpl.recur_freq, checkDate);
+    }
+  });
+  return total;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INVESTMENT RETURN CALCULATION
+// ═══════════════════════════════════════════════════════════════
+function calcInvestmentReturn(accId) {
+  const acc = accounts.find(a=>a.id===accId);
+  if (!acc || !['savings','investment'].includes(acc.type)) return null;
+  const currentBal = calcBalance(accId);
+  // Total contributed = opening balance + all investment inflows + withdrawal outflows
+  const txs = transactions.filter(t => t.account_id===accId || t.to_account_id===accId);
+  let contributed = parseFloat(acc.opening_balance)||0;
+  txs.forEach(t => {
+    const amt = parseFloat(t.amount)||0;
+    if (t.type==='investment' && t.to_account_id===accId) contributed += amt;  // money in
+    if (t.type==='withdrawal' && t.account_id===accId)   contributed -= amt;  // money out
+    // adjustments = growth, don't count as contribution
+  });
+  const growth = currentBal - contributed;
+  const growthPct = contributed > 0 ? (growth/contributed)*100 : 0;
+  // Annualised: find oldest transaction date
+  const allDates = txs.map(t=>t.date).sort();
+  const firstDate = allDates[0] || acc.created_at?.split('T')[0];
+  let annualisedPct = null;
+  if (firstDate) {
+    const years = (new Date() - new Date(firstDate+'T00:00:00')) / (1000*60*60*24*365);
+    if (years > 0.08) annualisedPct = growthPct / years; // only show if > 1 month of data
+  }
+  const expectedRate = parseFloat(acc.expected_rate)||0;
+  const projMonthly  = expectedRate > 0 ? (currentBal * expectedRate/100/12) : null;
+  return { currentBal, contributed, growth, growthPct, annualisedPct, projMonthly, expectedRate };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATS — updated with all new tiles
 // ═══════════════════════════════════════════════════════════════
 // Account type groups
 const LIQUID_TYPES      = ['checking','credit','cash','custom'];   // Net Balance
@@ -1645,41 +1900,63 @@ const LOAN_TYPES        = ['loan'];
 const INVEST_TYPES      = ['savings','investment'];
 
 function renderStats() {
-  const now = new Date(), m = now.getMonth(), y = now.getFullYear();
-  const todayStr = now.toISOString().split('T')[0];
+  const period  = getActivePeriod();
+  const todayStr = new Date().toISOString().split('T')[0];
+
   const monthly = transactions.filter(t => {
-    const d = new Date(t.date+'T00:00:00');
-    return d.getMonth()===m && d.getFullYear()===y;
+    return t.date >= period.start && t.date <= period.end;
   });
 
-  const income  = monthly.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount),0);
-  // debt_payment counts as spend in all reporting
+  const income  = monthly.filter(t=>t.type==='income'||t.type==='withdrawal').reduce((a,t)=>a+Number(t.amount),0);
   const spend   = monthly.filter(t=>t.type==='spend'||t.type==='debt_payment').reduce((a,t)=>a+Number(t.amount),0);
   const invest  = monthly.filter(t=>t.type==='investment').reduce((a,t)=>a+Number(t.amount),0);
   const debtPay = monthly.filter(t=>t.type==='debt_payment').reduce((a,t)=>a+Number(t.amount),0);
 
-  // Account balances — respects balanceAsOfToday flag via calcBalance
   const netBal   = accounts.filter(a=>!a.is_archived && LIQUID_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
   const netWorth = accounts.filter(a=>!a.is_archived && WEALTH_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
-  // Total debt = sum of loan account balances (positive = amount owed)
   const debt     = accounts.filter(a=>!a.is_archived && LOAN_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
 
-  const prefs   = getDashPrefs();
-  const cardOn  = id => prefs.cards.find(c=>c.id===id)?.on;
-  const secOn   = id => prefs.sections.find(s=>s.id===id)?.on;
+  // EOM / end-of-period projections
+  const eomPayments = getExpectedPaymentsToDate(period.end);
+  const eomIncome   = getExpectedIncomeToDate(period.end);
+  const eomBalance  = netBal - eomPayments.total + eomIncome;
 
-  // ── Stat cards ──
+  // Salary cycle runway: days of spending left at current daily rate
+  let salaryRunway = null;
+  if (dashCycleMode === 'salary') {
+    const cycle = getSalaryCycleDates();
+    if (cycle) {
+      const daysInCycle = Math.max(1, (new Date(cycle.end) - new Date(cycle.start)) / (1000*60*60*24));
+      const dailySpend  = daysInCycle > 0 ? spend / Math.max(1, (new Date(todayStr) - new Date(cycle.start)) / (1000*60*60*24)) : 0;
+      salaryRunway = dailySpend > 0 ? Math.floor(netBal / dailySpend) : null;
+    }
+  }
+
+  const prefs  = getDashPrefs();
+  const cardOn = id => prefs.cards.find(c=>c.id===id)?.on;
+  const secOn  = id => prefs.sections.find(s=>s.id===id)?.on;
+
+  // ── Stat cards (in user-defined order) ──
   const grid = document.getElementById('statsGrid');
   if (grid) {
     const cards = [];
-    if (cardOn('income'))       cards.push({ label:'Income',          val:'+'+currency+fmt(income),  cls:'g', sub:monthly.filter(t=>t.type==='income').length+' txns' });
-    if (cardOn('spending'))     cards.push({ label:'Spending',        val:currency+fmt(spend),        cls:'r', sub:monthly.filter(t=>t.type==='spend').length+' txns' });
-    if (cardOn('invested'))     cards.push({ label:'Invested / Saved',val:currency+fmt(invest),       cls:'b', sub:monthly.filter(t=>t.type==='investment').length+' txns' });
-    if (cardOn('debt_payment')) cards.push({ label:'Debt Payments',   val:currency+fmt(debtPay),      cls:'r', sub:'this month' });
-    if (cardOn('net_bal'))      cards.push({ label:'Net Balance',     val:(netBal>=0?'+':'')+currency+fmt(netBal),   cls:netBal>=0?'g':'r',   sub:'liquid accounts'+(balanceAsOfToday?' · today':'') });
-    if (cardOn('net_worth'))    cards.push({ label:'Net Worth',       val:(netWorth>=0?'+':'')+currency+fmt(netWorth), cls:netWorth>=0?'g':'r', sub:'excl. loans'+(balanceAsOfToday?' · today':'') });
-    if (cardOn('debt'))         cards.push({ label:'Total Debt',      val:currency+fmt(debt),          cls:'r', sub:'loan accounts' });
-    grid.style.gridTemplateColumns = `repeat(${Math.min(cards.length,4)},1fr)`;
+    prefs.cards.forEach(c => {
+      if (!c.on) return;
+      switch(c.id) {
+        case 'income':        cards.push({ label:'Income',          val:'+'+currency+fmt(income),    cls:'g', sub:monthly.filter(t=>t.type==='income'||t.type==='withdrawal').length+' txns' }); break;
+        case 'spending':      cards.push({ label:'Spending',        val:'-'+currency+fmt(spend),     cls:'r', sub:monthly.filter(t=>t.type==='spend'||t.type==='debt_payment').length+' txns' }); break;
+        case 'invested':      cards.push({ label:'Invested/Saved',  val:'-'+currency+fmt(invest),    cls:'b', sub:monthly.filter(t=>t.type==='investment').length+' txns' }); break;
+        case 'debt_payment':  cards.push({ label:'Debt Payments',   val:'-'+currency+fmt(debtPay),   cls:'r', sub:'this period' }); break;
+        case 'net_bal':       cards.push({ label:'Net Balance',     val:(netBal>=0?'+':'')+currency+fmt(netBal),     cls:netBal>=0?'g':'r',    sub:'liquid accounts'+(balanceAsOfToday?' · today':'') }); break;
+        case 'net_worth':     cards.push({ label:'Net Worth',       val:(netWorth>=0?'+':'')+currency+fmt(netWorth), cls:netWorth>=0?'g':'r',  sub:'excl. loans'+(balanceAsOfToday?' · today':'') }); break;
+        case 'debt':          cards.push({ label:'Total Debt',      val:currency+fmt(debt),           cls:'r', sub:'loan accounts' }); break;
+        case 'eom_payments':  cards.push({ label:`Due till ${period.end.slice(5).replace('-','/')}`, val:'-'+currency+fmt(eomPayments.total), cls:'r', sub:eomPayments.items.length+' expected payments' }); break;
+        case 'eom_balance':   cards.push({ label:`Expected ${period.end.slice(5).replace('-','/')} balance`, val:(eomBalance>=0?'+':'')+currency+fmt(eomBalance), cls:eomBalance>=0?'g':'r', sub:'net bal ± remaining' }); break;
+        case 'salary_runway': if (salaryRunway!==null) cards.push({ label:'Runway', val:salaryRunway+' days', cls:salaryRunway>14?'g':salaryRunway>7?'b':'r', sub:'at current spend rate' }); break;
+      }
+    });
+    const cols = Math.min(Math.max(cards.length, 1), 4);
+    grid.style.gridTemplateColumns = `repeat(${cols},1fr)`;
     grid.innerHTML = cards.map(c =>
       `<div class="stat-card"><div class="stat-label">${c.label}</div><div class="stat-value ${c.cls}">${c.val}</div><div class="stat-delta">${c.sub}</div></div>`
     ).join('');
@@ -1690,14 +1967,23 @@ function renderStats() {
   if (!secs) return;
   let html = '';
 
-  // Balance date toggle bar
-  html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:12px;color:var(--text2)">
-    <span>Account balances:</span>
-    <div class="view-tabs" style="font-size:11px">
-      <button class="view-tab ${balanceAsOfToday?'active':''}" onclick="setBalanceDate(true)">As of today</button>
-      <button class="view-tab ${!balanceAsOfToday?'active':''}" onclick="setBalanceDate(false)">All transactions</button>
-    </div>
+  // Cycle/balance toggle bar
+  const salaryDay = currentProfile?.preferences?.salary_day;
+  html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:12px;flex-wrap:wrap">`;
+  html += `<div class="view-tabs" style="font-size:11px">
+    <button class="view-tab ${balanceAsOfToday?'active':''}" onclick="setBalanceDate(true)">As of today</button>
+    <button class="view-tab ${!balanceAsOfToday?'active':''}" onclick="setBalanceDate(false)">All transactions</button>
   </div>`;
+  if (salaryDay) {
+    html += `<div class="view-tabs" style="font-size:11px">
+      <button class="view-tab ${dashCycleMode==='month'?'active':''}" onclick="setCycleMode('month',this)">Monthly</button>
+      <button class="view-tab ${dashCycleMode==='salary'?'active':''}" onclick="setCycleMode('salary',this)">Salary cycle</button>
+    </div>`;
+  }
+  if (period.isSalary) {
+    html += `<div class="cycle-banner">Salary cycle: <strong>${period.label}</strong></div>`;
+  }
+  html += '</div>';
 
   if (secOn('breakdown') || secOn('cashflow')) {
     html += '<div class="grid-2" style="margin-bottom:16px">';
@@ -1715,16 +2001,13 @@ function renderStats() {
     }
     html += '</div>';
   }
-
   if (secOn('recent')) {
     html += `<div class="card"><div class="card-title">Recent
       <span style="color:var(--green);cursor:pointer;font-size:11px;font-weight:400" onclick="goTo('transactions')">all →</span></div>
       <table class="tbl"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Account</th><th>By</th><th style="text-align:right">Amount</th></tr></thead>
       <tbody id="recentBody"></tbody></table></div>`;
   }
-
   secs.innerHTML = html;
-
   if (secOn('breakdown')) renderDashCatView();
   if (secOn('cashflow'))  renderFlowChart();
   if (secOn('recent'))    renderRecent();
@@ -1918,21 +2201,38 @@ function renderAccounts() {
   if (!accounts.length) { grid.innerHTML='<div class="empty" style="grid-column:1/-1">No accounts yet — add one</div>'; return; }
 
   grid.innerHTML = getSortedAccounts().map(a => {
-    const bal = calcBalance(a.id);  // respects balanceAsOfToday via calcBalance
-    const isLoan = a.type === 'loan';
-    const txCount = transactions.filter(t => t.account_id===a.id || t.to_account_id===a.id).length;
+    const bal      = calcBalance(a.id);
+    const isLoan   = a.type === 'loan';
+    const isInvest = ['savings','investment'].includes(a.type);
+    const txCount  = transactions.filter(t => t.account_id===a.id || t.to_account_id===a.id).length;
     const typeLabel = a.type==='custom' ? (a.custom_type||'custom') : a.type;
-    const barColor = a.color || 'var(--green)';
-    // Loan: positive bal = debt remaining (show in red), 0 = paid off (green)
-    const balCls = isLoan ? (bal<=0?'pos':'neg') : (bal>=0?'pos':'neg');
+    const barColor  = a.color || 'var(--green)';
+    const balCls    = isLoan ? (bal<=0?'pos':'neg') : (bal>=0?'pos':'neg');
     const balDisplay = isLoan
-      ? (bal<=0 ? 'Paid off' : currency+fmt(bal)+' owed')
+      ? (bal<=0 ? 'Paid off ✓' : currency+fmt(bal)+' owed')
       : (bal>=0?'':'-')+currency+fmt(Math.abs(bal));
+
+    // Investment/savings return metrics
+    let returnHtml = '';
+    if (isInvest) {
+      const ret = calcInvestmentReturn(a.id);
+      if (ret) {
+        const growthCls = ret.growth >= 0 ? 'color:var(--green)' : 'color:var(--red)';
+        const growthSign = ret.growth >= 0 ? '+' : '';
+        returnHtml = `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">
+          <div>Contributed: ${currency}${fmt(ret.contributed)}</div>
+          <div style="${growthCls}">Growth: ${growthSign}${currency}${fmt(ret.growth)} (${growthSign}${ret.growthPct.toFixed(1)}%${ret.annualisedPct!==null ? ' · '+ret.annualisedPct.toFixed(1)+'% p.a.' : ''})</div>
+          ${ret.projMonthly ? `<div style="color:var(--green)">Projected: +${currency}${fmt(ret.projMonthly)}/mo at ${ret.expectedRate}%</div>` : ''}
+        </div>`;
+      }
+    }
+
     return `<div class="acc-card">
       <div class="acc-color-bar" style="background:${barColor}"></div>
       <div class="acc-name">${esc(a.name)} <span style="color:var(--text3);font-weight:400">${typeLabel}</span></div>
       <div class="acc-bal ${balCls}">${balDisplay}</div>
       <div class="acc-sub">${txCount} transaction${txCount!==1?'s':''} · opening: ${isLoan?currency+fmt(a.opening_balance||0)+' debt':currency+fmt(a.opening_balance||0)}</div>
+      ${returnHtml}
       <div class="acc-card-actions">
         <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="openAddAccount('${a.id}')">edit</button>
         <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="openAdjustModal('${a.id}')">adjust balance</button>
@@ -1941,7 +2241,6 @@ function renderAccounts() {
     </div>`;
   }).join('');
 
-  // Account history chart
   renderAccChart();
 }
 
@@ -2121,34 +2420,45 @@ function populateTxDropdowns() {
 
 function selType(type) {
   selTxType = type;
-  document.querySelectorAll('.to').forEach(el => {
+  document.querySelectorAll('#txModal .to').forEach(el => {
     el.className = 'to';
     if (el.dataset.t === type) el.className = `to to-${type}`;
   });
-  const isMovement    = type === 'transfer' || type === 'withdrawal';
+  const isTransfer    = type === 'transfer';
+  const isMovement    = type === 'transfer' || type === 'withdrawal' || type === 'investment';
   const isDebtPayment = type === 'debt_payment';
-  const txAccRow      = document.getElementById('txAccRow');
-  const txTransferRow = document.getElementById('txTransferRow');
-  const txDebtRow     = document.getElementById('txDebtRow');
-  if (txAccRow)      txAccRow.style.display      = (isMovement||isDebtPayment) ? 'none' : '';
-  if (txTransferRow) txTransferRow.style.display  = isMovement    ? 'block' : 'none';
-  if (txDebtRow)     txDebtRow.style.display      = isDebtPayment ? 'block' : 'none';
-  // Update from/to labels
+
+  // Account row visibility
+  document.getElementById('txAccRow').style.display      = (isMovement||isDebtPayment) ? 'none' : '';
+  document.getElementById('txTransferRow').style.display  = isMovement    ? 'block' : 'none';
+  document.getElementById('txDebtRow').style.display      = isDebtPayment ? 'block' : 'none';
+
+  // Category only hidden for plain transfer
+  const catRow = document.getElementById('txCatRow');
+  if (catRow) catRow.style.display = isTransfer ? 'none' : '';
+
+  // Recurring hidden for transfers
+  const recurRow = document.querySelector('.recur-row');
+  if (recurRow) recurRow.style.display = isTransfer ? 'none' : '';
+
+  // Update From/To labels
   const fromLbl = document.getElementById('txFromLbl');
   const toLbl   = document.getElementById('txToLbl');
-  if (fromLbl) fromLbl.textContent = type==='withdrawal' ? 'From (savings/investment)' : 'From account';
-  if (toLbl)   toLbl.textContent   = type==='withdrawal' ? 'To (checking/cash)'        : 'To account';
-  // Category + recurring visibility
-  const catRow   = document.getElementById('txCat')?.closest('.fg2');
-  const recurRow = document.querySelector('.recur-row');
-  if (catRow)   catRow.style.display   = isMovement ? 'none' : '';
-  if (recurRow) recurRow.style.display = isMovement ? 'none' : '';
+  if (fromLbl) fromLbl.textContent =
+    type==='withdrawal'  ? 'From savings/investment' :
+    type==='investment'  ? 'From account' : 'From account';
+  if (toLbl)   toLbl.textContent =
+    type==='withdrawal'  ? 'To account' :
+    type==='investment'  ? 'To savings/investment' : 'To account';
+
   // Description hint
   const descEl = document.getElementById('txDesc');
   if (descEl) {
-    if (isMovement)    descEl.placeholder = type==='withdrawal' ? 'e.g. Withdraw from savings' : 'e.g. Move to savings';
-    else if (isDebtPayment) descEl.placeholder = 'e.g. Mortgage payment';
-    else               descEl.placeholder = 'What was this?';
+    if (type==='transfer')    descEl.placeholder = 'e.g. Move funds';
+    else if (type==='withdrawal')  descEl.placeholder = 'e.g. Withdraw from savings';
+    else if (type==='investment')  descEl.placeholder = 'e.g. Monthly savings deposit';
+    else if (type==='debt_payment') descEl.placeholder = 'e.g. Mortgage payment';
+    else descEl.placeholder = 'What was this?';
   }
 }
 
@@ -2163,11 +2473,11 @@ async function saveTx() {
   const desc   = document.getElementById('txDesc').value.trim();
   if (!amount || amount <= 0 || !desc) { toast('Amount and description required', 'err'); return; }
 
-  const isTransfer    = selTxType === 'transfer' || selTxType === 'withdrawal';
+  const isMovement    = selTxType === 'transfer' || selTxType === 'withdrawal' || selTxType === 'investment';
   const isDebtPayment = selTxType === 'debt_payment';
 
   let accId, toAccId;
-  if (isTransfer) {
+  if (isMovement) {
     accId   = document.getElementById('txFrom').value;
     toAccId = document.getElementById('txTo').value;
     if (accId === toAccId) { toast('From and To accounts must be different', 'err'); return; }
@@ -2181,7 +2491,7 @@ async function saveTx() {
     toAccId = null;
   }
 
-  if (!isTransfer && !isDebtPayment) localStorage.setItem('pocket_last_acc', accId);
+  if (!isMovement && !isDebtPayment) localStorage.setItem('pocket_last_acc', accId);
 
   const isRecur = document.getElementById('txRecur').checked;
   const tx = {
@@ -2212,7 +2522,6 @@ async function saveTx() {
     const { data, error: err } = await sb.from('transactions').insert(tx).select().single();
     error = err;
     if (!error && data) {
-      // Mark as recently inserted so Realtime event doesn't double-add it
       recentlyInserted.add(data.id);
       setTimeout(() => recentlyInserted.delete(data.id), 5000);
       transactions.unshift(data);
@@ -2353,6 +2662,12 @@ function updateNavUI() {
   if (icd) icd.textContent = household?.invite_code || '—';
   const ci = document.getElementById('currencyInput');
   if (ci) ci.value = currency;
+  // Load salary day
+  const salDay = currentProfile?.preferences?.salary_day;
+  const sdi = document.getElementById('salaryDayInput');
+  if (sdi && salDay) sdi.value = salDay;
+  const sdh = document.getElementById('salaryDayHint');
+  if (sdh && salDay) sdh.textContent = `Day ${salDay} of each month`;
 }
 
 function goTo(page) {
@@ -3037,7 +3352,9 @@ function toggleCustomType() {
   const sel  = document.getElementById('accType');
   const row  = document.getElementById('accCustomTypeRow');
   const hint = document.getElementById('openingBalHint');
+  const rateRow = document.getElementById('accRateRow');
   if (row) row.style.display = sel.value==='custom' ? 'block' : 'none';
+  if (rateRow) rateRow.style.display = ['savings','investment'].includes(sel.value) ? 'block' : 'none';
   if (hint) hint.textContent = sel.value==='loan'
     ? 'Enter the current amount owed as a positive number (e.g. 250000 for a 250k mortgage). Payments will reduce this.'
     : 'The starting balance of this account. Transactions are calculated on top.';
@@ -3047,24 +3364,24 @@ function openAddAccount(accId) {
   editingAccId = accId || null;
   const acc = accId ? accounts.find(a=>a.id===accId) : null;
   document.getElementById('accModalTitle').textContent = acc ? 'Edit Account' : 'Add Account';
-  document.getElementById('accName').value = acc?.name || '';
-  document.getElementById('accOpeningBal').value = acc?.opening_balance || '0';
-  document.getElementById('accColor').value = acc?.color || '#2D5A3D';
+  document.getElementById('accName').value         = acc?.name || '';
+  document.getElementById('accOpeningBal').value   = acc?.opening_balance || '0';
+  document.getElementById('accColor').value        = acc?.color || '#2D5A3D';
+  document.getElementById('accExpectedRate').value = acc?.expected_rate || '';
 
-  const typeEl = document.getElementById('accType');
+  const typeEl    = document.getElementById('accType');
   const customRow = document.getElementById('accCustomTypeRow');
-  const stdTypes = ['checking','savings','credit','cash','investment'];
+  const rateRow   = document.getElementById('accRateRow');
+  const stdTypes  = ['checking','savings','credit','cash','investment','loan'];
   if (acc) {
-    if (stdTypes.includes(acc.type)) {
-      typeEl.value = acc.type;
-    } else {
-      typeEl.value = 'custom';
-      document.getElementById('accCustomType').value = acc.custom_type || acc.type;
-    }
+    if (stdTypes.includes(acc.type)) typeEl.value = acc.type;
+    else { typeEl.value = 'custom'; document.getElementById('accCustomType').value = acc.custom_type || acc.type; }
   } else {
     typeEl.value = 'checking';
   }
   if (customRow) customRow.style.display = typeEl.value==='custom' ? 'block' : 'none';
+  if (rateRow)   rateRow.style.display   = ['savings','investment'].includes(typeEl.value) ? 'block' : 'none';
+  toggleCustomType();
   renderAccColorPalette(acc?.color||'#2D5A3D');
   openModal('accModal');
 }
@@ -3074,13 +3391,12 @@ async function saveAccount() {
   const typeVal = document.getElementById('accType').value;
   const openBal = parseFloat(document.getElementById('accOpeningBal').value)||0;
   const color   = document.getElementById('accColor').value;
+  const expRate = parseFloat(document.getElementById('accExpectedRate').value)||null;
   if (!name) { toast('Enter account name','err'); return; }
 
-  const stdTypes = ['checking','savings','credit','cash','investment'];
   const type        = typeVal==='custom' ? 'custom' : typeVal;
   const custom_type = typeVal==='custom' ? (document.getElementById('accCustomType').value.trim()||'custom') : null;
-
-  const payload = { household_id: household.id, name, type, custom_type, opening_balance: openBal, color };
+  const payload = { household_id: household.id, name, type, custom_type, opening_balance: openBal, color, expected_rate: expRate };
 
   setLoading('accSaveBtn', true);
   let error;
@@ -3088,10 +3404,7 @@ async function saveAccount() {
     const res = await sb.from('accounts').update(payload).eq('id', editingAccId);
     error = res.error;
     console.log('[saveAccount] UPDATE response:', res);
-    if (!error) {
-      const i = accounts.findIndex(a=>a.id===editingAccId);
-      if (i>=0) accounts[i] = {...accounts[i], ...payload, id: editingAccId};
-    }
+    if (!error) { const i=accounts.findIndex(a=>a.id===editingAccId); if(i>=0) accounts[i]={...accounts[i],...payload,id:editingAccId}; }
   } else {
     const res = await sb.from('accounts').insert(payload).select().single();
     error = res.error;
@@ -3099,11 +3412,7 @@ async function saveAccount() {
     if (!error && res.data) accounts.push(res.data);
   }
   setLoading('accSaveBtn', false);
-  if (error) {
-    console.error('[saveAccount] Error:', error);
-    toast('Error saving: ' + error.message, 'err');
-    return;
-  }
+  if (error) { console.error('[saveAccount] Error:', error); toast('Error saving: '+error.message,'err'); return; }
   closeModal('accModal');
   renderAll();
   toast(editingAccId ? 'Account updated ✓' : 'Account added ✓', 'ok');
@@ -3125,8 +3434,8 @@ function openAdjustModal(accId) {
 }
 
 function calcBalance(accId, upToDate) {
-  const acc     = accounts.find(a=>a.id===accId);
-  const isLoan  = acc?.type === 'loan';
+  const acc    = accounts.find(a=>a.id===accId);
+  const isLoan = acc?.type === 'loan';
   let bal = parseFloat(acc?.opening_balance) || 0;
   const todayStr = new Date().toISOString().split('T')[0];
   const cutoff   = upToDate || (balanceAsOfToday ? todayStr : null);
@@ -3135,23 +3444,27 @@ function calcBalance(accId, upToDate) {
     const amt = parseFloat(t.amount) || 0;
     if (t.type === 'adjustment' && t.account_id === accId) { bal += amt; return; }
     if (isLoan) {
-      // Loan: opening balance = total debt. Payments reduce it, new debt increases it.
-      if (t.type === 'debt_payment') {
-        if (t.to_account_id === accId) bal -= amt;  // payment → debt decreases
-      }
-      if (t.type === 'transfer' || t.type === 'withdrawal') {
-        if (t.to_account_id === accId) bal -= amt;
-        if (t.account_id    === accId) bal += amt;
-      }
-      if (t.type === 'spend'  && t.account_id === accId) bal += amt; // charge to loan → more debt
-      if (t.type === 'income' && t.account_id === accId) bal -= amt; // credit → less debt
+      // Loan: opening balance = total debt. Payments reduce it.
+      if (t.type === 'debt_payment' && t.to_account_id === accId) bal -= amt;
+      if ((t.type==='transfer'||t.type==='withdrawal') && t.to_account_id===accId) bal -= amt;
+      if ((t.type==='transfer'||t.type==='withdrawal') && t.account_id===accId)    bal += amt;
+      if (t.type==='spend'  && t.account_id===accId) bal += amt; // charge to loan = more debt
+      if (t.type==='income' && t.account_id===accId) bal -= amt;
     } else {
-      // Normal account
-      if (t.type === 'income'      && t.account_id === accId) bal += amt;
-      if (t.type === 'spend'       && t.account_id === accId) bal -= amt;
-      if (t.type === 'investment'  && t.account_id === accId) bal -= amt;
-      if (t.type === 'debt_payment'&& t.account_id === accId) bal -= amt; // money leaves source
-      if (t.type === 'transfer' || t.type === 'withdrawal') {
+      if (t.type==='income'      && t.account_id===accId) bal += amt;
+      if (t.type==='spend'       && t.account_id===accId) bal -= amt;
+      if (t.type==='debt_payment'&& t.account_id===accId) bal -= amt; // cash leaves
+      // investment: From→To, both directions tracked
+      if (t.type==='investment') {
+        if (t.account_id    === accId) bal -= amt; // money leaves source
+        if (t.to_account_id === accId) bal += amt; // money arrives at savings/investment
+      }
+      // withdrawal: From savings→To liquid
+      if (t.type==='withdrawal') {
+        if (t.account_id    === accId) bal -= amt; // savings/investment decreases
+        if (t.to_account_id === accId) bal += amt; // liquid account increases
+      }
+      if (t.type==='transfer') {
         if (t.account_id    === accId) bal -= amt;
         if (t.to_account_id === accId) bal += amt;
       }
