@@ -351,6 +351,34 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 .acc-settings-row.drag-over td{background:var(--green-l) !important;}
 .dragging{opacity:.4;}
 
+.badge-withdrawal{background:#f0e8f5;color:#7A5A8A;}
+.badge-adjustment{background:var(--surface2);color:var(--text2);}
+.to-withdrawal{background:#f0e8f5;color:#7A5A8A;border-color:#7A5A8A;}
+
+/* ── FORECAST TABLE ── */
+.forecast-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.forecast-tbl th{text-align:right;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:6px 10px;border-bottom:2px solid var(--border);font-family:'DM Mono',monospace;}
+.forecast-tbl th:first-child{text-align:left;}
+.forecast-tbl td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:'DM Mono',monospace;font-size:12px;}
+.forecast-tbl td:first-child{text-align:left;font-family:'DM Sans',sans-serif;font-weight:500;font-size:13px;}
+.forecast-tbl tr.fc-future td{color:var(--text3);}
+.forecast-tbl tr.fc-current td{background:var(--green-l);}
+.forecast-tbl tr.fc-total td{font-weight:700;border-top:2px solid var(--border);background:var(--surface2);}
+.fc-proj{color:var(--text3);font-style:italic;}
+.fc-pos{color:var(--green);}
+.fc-neg{color:var(--red);}
+
+/* ── RECURRING STATUS ── */
+.recur-status{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.4px;font-family:'DM Mono',monospace;}
+.recur-status.due{background:var(--amber-l);color:var(--amber);}
+.recur-status.logged{background:var(--green-l);color:var(--green);}
+.recur-status.overdue{background:var(--red-l);color:var(--red);}
+
+/* ── DASH TOGGLE ITEM ── */
+.dash-toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:500;transition:all .12s;user-select:none;}
+.dash-toggle.on{background:var(--green-l);border-color:var(--green);color:var(--green);}
+.dash-toggle.off{background:var(--surface2);color:var(--text3);}
+
 /* ── DASHBOARD CATEGORY BREAKDOWN ── */
 .dash-cat-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
 .dash-cat-row:last-child{border-bottom:none;}
@@ -475,6 +503,14 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
         <span>Analytics</span>
       </div>
+      <div class="nav-item" onclick="goTo('recurring')">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <span>Recurring</span>
+      </div>
+      <div class="nav-item" onclick="goTo('forecast')">
+        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        <span>Forecast</span>
+      </div>
       <div class="nav-item" onclick="goTo('settings')">
         <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="1.8"/></svg>
         <span>Settings</span>
@@ -502,34 +538,13 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <div class="page active" id="page-dashboard">
       <div class="page-header">
         <div><div class="page-title">Dashboard</div><div class="page-sub" id="dashDate">—</div></div>
-        <button class="btn btn-primary" onclick="openAddTx()">+ Add transaction</button>
-      </div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">Income</div><div class="stat-value g" id="sIncome">—</div><div class="stat-delta" id="sIncomeN">this month</div></div>
-        <div class="stat-card"><div class="stat-label">Spending</div><div class="stat-value r" id="sSpend">—</div><div class="stat-delta" id="sSpendN">this month</div></div>
-        <div class="stat-card"><div class="stat-label">Invested</div><div class="stat-value b" id="sInvest">—</div><div class="stat-delta" id="sInvestN">this month</div></div>
-        <div class="stat-card"><div class="stat-label">Net (month)</div><div class="stat-value" id="sNet">—</div><div class="stat-delta">income − spending</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div class="stat-label" style="margin-bottom:3px">Net Worth</div><div style="font-size:17px;font-weight:700;letter-spacing:-0.4px;font-family:'DM Mono',monospace" id="sNetWorth">—</div></div></div>
-      </div>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-title">
-            Spending breakdown
-            <div class="view-tabs">
-              <button class="view-tab active" onclick="setDashView('nature',this)">Nature</button>
-              <button class="view-tab" onclick="setDashView('group',this)">Group</button>
-              <button class="view-tab" onclick="setDashView('sub',this)">Sub</button>
-              <button class="view-tab" onclick="setDashView('all',this)">All</button>
-            </div>
-          </div>
-          <div id="dashCatView"></div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" style="font-size:12px" onclick="openDashCustomise()">⚙ Customise</button>
+          <button class="btn btn-primary" onclick="openAddTx()">+ Add transaction</button>
         </div>
-        <div class="card"><div class="card-title">Cash flow <span style="color:var(--text3)">6 months</span></div><div class="ch"><canvas id="flowChart"></canvas></div></div>
       </div>
-      <div class="card">
-        <div class="card-title">Recent <span style="color:var(--green);cursor:pointer;font-size:11px;font-weight:400" onclick="goTo('transactions')">all →</span></div>
-        <table class="tbl"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Account</th><th>By</th><th style="text-align:right">Amount</th></tr></thead>
-        <tbody id="recentBody"></tbody></table>
-      </div>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div id="dashSections"></div>
     </div>
 
     <!-- TRANSACTIONS -->
@@ -563,7 +578,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
       </div>
       <div class="filters">
         <input class="fsearch" id="txSearch" placeholder="Search…" oninput="renderTxPage()">
-        <select class="fsel" id="fType" onchange="renderTxPage()"><option value="">All types</option><option value="spend">Spend</option><option value="income">Income</option><option value="investment">Investment</option><option value="transfer">Transfer</option></select>
+        <select class="fsel" id="fType" onchange="renderTxPage()"><option value="">All types</option><option value="spend">Spend</option><option value="income">Income</option><option value="investment">Invest/Save</option><option value="transfer">Transfer</option><option value="withdrawal">Withdrawal</option></select>
         <select class="fsel" id="fCat" onchange="renderTxPage()"></select>
         <select class="fsel" id="fAcc" onchange="renderTxPage()"></select>
         <select class="fsel" id="fPerson" onchange="renderTxPage()"></select>
@@ -636,6 +651,33 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         <div class="card-title">Spending by person <span style="color:var(--text3)">6 months</span></div>
         <div class="ch"><canvas id="personChart"></canvas></div>
       </div>
+    </div>
+
+    <!-- RECURRING -->
+    <div class="page" id="page-recurring">
+      <div class="page-header">
+        <div><div class="page-title">Recurring</div><div class="page-sub" id="recurPageSub">scheduled transactions</div></div>
+        <button class="btn btn-primary" onclick="openAddTx()">+ Add transaction</button>
+      </div>
+      <div class="card mb16" id="recurSummaryCard" style="display:none">
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <div><div class="stat-label">Expected this month</div><div style="font-size:20px;font-weight:700" id="recurMonthTotal">—</div></div>
+          <div><div class="stat-label">Due / not yet logged</div><div style="font-size:20px;font-weight:700;color:var(--amber)" id="recurDueCount">—</div></div>
+        </div>
+      </div>
+      <div id="recurPageContent"></div>
+    </div>
+
+    <!-- FORECAST -->
+    <div class="page" id="page-forecast">
+      <div class="page-header">
+        <div><div class="page-title">Forecast</div><div class="page-sub">projected vs actual</div></div>
+        <div class="view-tabs">
+          <button class="view-tab active" id="forecastTabMonth" onclick="setForecastTab('month',this)">Monthly</button>
+          <button class="view-tab" id="forecastTabAnnual" onclick="setForecastTab('annual',this)">Annual</button>
+        </div>
+      </div>
+      <div id="forecastContent"></div>
     </div>
 
     <!-- SETTINGS -->
@@ -734,11 +776,12 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <!-- Quick-add templates strip (hidden when editing) -->
     <div id="qaStrip" style="display:none"></div>
     <div class="fg"><label class="fl">Type</label>
-      <div class="type-sel">
+      <div class="type-sel" style="grid-template-columns:repeat(3,1fr)">
         <div class="to" data-t="spend"      onclick="selType('spend')">spend</div>
         <div class="to" data-t="income"     onclick="selType('income')">income</div>
-        <div class="to" data-t="investment" onclick="selType('investment')">invest</div>
+        <div class="to" data-t="investment" onclick="selType('investment')">invest / save</div>
         <div class="to" data-t="transfer"   onclick="selType('transfer')">transfer</div>
+        <div class="to" data-t="withdrawal" onclick="selType('withdrawal')">withdrawal</div>
       </div>
     </div>
     <div class="fg2">
@@ -785,11 +828,12 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
       <div class="fg" style="margin:0">
         <label class="fl">Type</label>
         <select class="fs" id="accType" onchange="toggleCustomType()">
-          <option value="checking">Checking</option>
+          <option value="checking">Checking / Current</option>
           <option value="savings">Savings</option>
-          <option value="credit">Credit Card</option>
-          <option value="cash">Cash</option>
           <option value="investment">Investment</option>
+          <option value="credit">Credit Card</option>
+          <option value="loan">Loan / Debt</option>
+          <option value="cash">Cash</option>
           <option value="custom">Custom…</option>
         </select>
       </div>
@@ -919,7 +963,22 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
   </div>
 </div>
 
-<!-- IMPORT TRANSACTIONS MODAL -->
+<!-- DASHBOARD CUSTOMISE MODAL -->
+<div class="overlay" id="dashCustomModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">Customise Dashboard</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Choose which cards and sections appear on your dashboard. Saved per user.</div>
+    <div class="s-title" style="font-size:11px;margin-bottom:8px">Stat cards</div>
+    <div id="dashCardToggles" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px"></div>
+    <div class="s-title" style="font-size:11px;margin-bottom:8px">Sections</div>
+    <div id="dashSectionToggles" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px"></div>
+    <div class="f-actions">
+      <button class="btn btn-ghost" onclick="closeModal('dashCustomModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toastWrap"></div>
 <div class="overlay" id="importTxModal">
   <div class="modal" style="width:560px">
     <div class="modal-title">Import Transactions from CSV</div>
@@ -1329,62 +1388,183 @@ async function joinHousehold() {
 // RENDER ALL
 // ═══════════════════════════════════════════════════════════════
 function renderAll() {
-  renderStats();          // includes renderDashCatView
+  renderStats();
   renderTxPage();
   renderAccounts();
   renderBudgets();
-  renderCharts();         // includes renderCatChart + renderAnalyticsBreakdown
+  renderCharts();
   renderCatTree();
   renderAccSettings();
   renderRecurSettings();
+  renderRecurPage();
   renderThemeEditor();
   populateFilters();
   populateTxDropdowns();
+  // Render forecast only if visible to avoid unnecessary compute
+  if (document.getElementById('page-forecast')?.classList.contains('active')) renderForecast();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD PREFERENCES
+// ═══════════════════════════════════════════════════════════════
+const DASH_CARDS_DEF = [
+  { id:'income',    label:'Income',          on:true  },
+  { id:'spending',  label:'Spending',        on:true  },
+  { id:'invested',  label:'Invested/Saved',  on:true  },
+  { id:'net_bal',   label:'Net Balance',     on:true  },
+  { id:'net_worth', label:'Net Worth',       on:true  },
+  { id:'debt',      label:'Total Debt',      on:false },
+];
+const DASH_SECTIONS_DEF = [
+  { id:'breakdown', label:'Spending Breakdown', on:true  },
+  { id:'cashflow',  label:'Cash Flow Chart',    on:true  },
+  { id:'recent',    label:'Recent Transactions',on:true  },
+];
+
+function getDashPrefs() {
+  const saved = currentProfile?.preferences?.dash || {};
+  return {
+    cards:    DASH_CARDS_DEF.map(c => ({ ...c, on: saved.cards?.[c.id] ?? c.on })),
+    sections: DASH_SECTIONS_DEF.map(s => ({ ...s, on: saved.sections?.[s.id] ?? s.on })),
+  };
+}
+
+async function saveDashPrefs(prefs) {
+  const dashPref = {
+    cards:    Object.fromEntries(prefs.cards.map(c=>[c.id,c.on])),
+    sections: Object.fromEntries(prefs.sections.map(s=>[s.id,s.on])),
+  };
+  const updated = { ...(currentProfile?.preferences||{}), dash: dashPref };
+  currentProfile.preferences = updated;
+  try { await sb.from('profiles').update({ preferences: updated }).eq('id', currentUser.id); } catch(e) {}
+}
+
+function openDashCustomise() {
+  const prefs = getDashPrefs();
+  const cardEl = document.getElementById('dashCardToggles');
+  const secEl  = document.getElementById('dashSectionToggles');
+  if (cardEl) cardEl.innerHTML = prefs.cards.map(c =>
+    `<div class="dash-toggle ${c.on?'on':'off'}" onclick="toggleDashItem('card','${c.id}',this)">${c.label}</div>`
+  ).join('');
+  if (secEl) secEl.innerHTML = prefs.sections.map(s =>
+    `<div class="dash-toggle ${s.on?'on':'off'}" onclick="toggleDashItem('section','${s.id}',this)">${s.label}</div>`
+  ).join('');
+  openModal('dashCustomModal');
+}
+
+async function toggleDashItem(kind, id, el) {
+  el.classList.toggle('on');
+  el.classList.toggle('off');
+  const prefs = getDashPrefs();
+  const arr = kind==='card' ? prefs.cards : prefs.sections;
+  const item = arr.find(x=>x.id===id);
+  if (item) item.on = el.classList.contains('on');
+  await saveDashPrefs(prefs);
+  renderStats();
 }
 
 // ═══════════════════════════════════════════════════════════════
 // STATS
 // ═══════════════════════════════════════════════════════════════
+// Account type groups
+const LIQUID_TYPES      = ['checking','credit','cash','custom'];   // Net Balance
+const WEALTH_TYPES      = ['checking','savings','investment','credit','cash','custom']; // Net Worth (excl loan)
+const LOAN_TYPES        = ['loan'];
+const INVEST_TYPES      = ['savings','investment'];
+
 function renderStats() {
   const now = new Date(), m = now.getMonth(), y = now.getFullYear();
   const monthly = transactions.filter(t => {
-    const d = new Date(t.date + 'T00:00:00');
-    return d.getMonth()===m && d.getFullYear()===y && t.type !== 'transfer';
+    const d = new Date(t.date+'T00:00:00');
+    return d.getMonth()===m && d.getFullYear()===y;
   });
-  const income = monthly.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount),0);
-  const spend  = monthly.filter(t=>t.type==='spend').reduce((a,t)=>a+Number(t.amount),0);
-  const invest = monthly.filter(t=>t.type==='investment').reduce((a,t)=>a+Number(t.amount),0);
-  const net = income - spend;
-  set('sIncome', currency+fmt(income));
-  set('sSpend',  currency+fmt(spend));
-  set('sInvest', currency+fmt(invest));
-  set('sNet', (net>=0?'+':'-')+currency+fmt(Math.abs(net)));
-  const netEl = document.getElementById('sNet');
-  if (netEl) netEl.style.color = net>=0 ? 'var(--green)' : 'var(--red)';
-  set('sIncomeN', monthly.filter(t=>t.type==='income').length + ' txns');
-  set('sSpendN',  monthly.filter(t=>t.type==='spend').length  + ' txns');
-  set('sInvestN', monthly.filter(t=>t.type==='investment').length + ' txns');
-  // Total net worth across all active accounts
-  const netWorth = accounts.filter(a=>!a.is_archived).reduce((sum,a)=>sum+calcBalance(a.id),0);
-  set('sNetWorth', (netWorth>=0?'+':'-')+currency+fmt(Math.abs(netWorth)));
-  const nwEl = document.getElementById('sNetWorth');
-  if (nwEl) nwEl.style.color = netWorth>=0 ? 'var(--green)' : 'var(--red)';
-  renderDashCatView();
-  // Recent
+
+  const income  = monthly.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount),0);
+  const spend   = monthly.filter(t=>t.type==='spend').reduce((a,t)=>a+Number(t.amount),0);
+  const invest  = monthly.filter(t=>t.type==='investment').reduce((a,t)=>a+Number(t.amount),0);
+
+  // Net Balance = all liquid account balances (checking, credit, cash, custom)
+  const netBal  = accounts.filter(a=>!a.is_archived && LIQUID_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
+  // Net Worth = all accounts except loans
+  const netWorth= accounts.filter(a=>!a.is_archived && WEALTH_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
+  // Total Debt = loan accounts (shown as positive = amount owed)
+  const debt    = accounts.filter(a=>!a.is_archived && LOAN_TYPES.includes(a.type)).reduce((s,a)=>s+Math.abs(calcBalance(a.id)),0);
+
+  const prefs   = getDashPrefs();
+  const cardOn  = id => prefs.cards.find(c=>c.id===id)?.on;
+  const secOn   = id => prefs.sections.find(s=>s.id===id)?.on;
+
+  // ── Stat cards ──
+  const grid = document.getElementById('statsGrid');
+  if (grid) {
+    const cards = [];
+    if (cardOn('income'))   cards.push({ label:'Income',         val:'+'+currency+fmt(income),   cls:'g', sub: monthly.filter(t=>t.type==='income').length+' txns' });
+    if (cardOn('spending')) cards.push({ label:'Spending',       val:currency+fmt(spend),         cls:'r', sub: monthly.filter(t=>t.type==='spend').length+' txns' });
+    if (cardOn('invested')) cards.push({ label:'Invested / Saved',val:currency+fmt(invest),       cls:'b', sub: monthly.filter(t=>t.type==='investment').length+' txns' });
+    if (cardOn('net_bal'))  cards.push({ label:'Net Balance',    val:(netBal>=0?'+':'')+currency+fmt(netBal), cls:netBal>=0?'g':'r', sub:'liquid accounts' });
+    if (cardOn('net_worth'))cards.push({ label:'Net Worth',      val:(netWorth>=0?'+':'')+currency+fmt(netWorth), cls:netWorth>=0?'g':'r', sub:'excl. loans' });
+    if (cardOn('debt'))     cards.push({ label:'Total Debt',     val:currency+fmt(debt),          cls:'r', sub:'loan accounts' });
+    grid.style.gridTemplateColumns = `repeat(${Math.min(cards.length,4)},1fr)`;
+    grid.innerHTML = cards.map(c =>
+      `<div class="stat-card"><div class="stat-label">${c.label}</div><div class="stat-value ${c.cls}">${c.val}</div><div class="stat-delta">${c.sub}</div></div>`
+    ).join('');
+  }
+
+  // ── Sections ──
+  const secs = document.getElementById('dashSections');
+  if (!secs) return;
+  let html = '';
+
+  if (secOn('breakdown') || secOn('cashflow')) {
+    html += '<div class="grid-2" style="margin-bottom:16px">';
+    if (secOn('breakdown')) {
+      html += `<div class="card"><div class="card-title">Spending breakdown
+        <div class="view-tabs">
+          <button class="view-tab ${dashView==='nature'?'active':''}" onclick="setDashView('nature',this)">Nature</button>
+          <button class="view-tab ${dashView==='group'?'active':''}" onclick="setDashView('group',this)">Group</button>
+          <button class="view-tab ${dashView==='sub'?'active':''}" onclick="setDashView('sub',this)">Sub</button>
+          <button class="view-tab ${dashView==='all'?'active':''}" onclick="setDashView('all',this)">All</button>
+        </div></div><div id="dashCatView"></div></div>`;
+    }
+    if (secOn('cashflow')) {
+      html += `<div class="card"><div class="card-title">Cash flow <span style="color:var(--text3)">6 months</span></div><div class="ch"><canvas id="flowChart"></canvas></div></div>`;
+    }
+    html += '</div>';
+  }
+
+  if (secOn('recent')) {
+    html += `<div class="card"><div class="card-title">Recent
+      <span style="color:var(--green);cursor:pointer;font-size:11px;font-weight:400" onclick="goTo('transactions')">all →</span></div>
+      <table class="tbl"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Account</th><th>By</th><th style="text-align:right">Amount</th></tr></thead>
+      <tbody id="recentBody"></tbody></table></div>`;
+  }
+
+  secs.innerHTML = html;
+
+  // Render sub-components
+  if (secOn('breakdown')) renderDashCatView();
+  if (secOn('cashflow'))  renderFlowChart();
+  if (secOn('recent'))    renderRecent();
+}
+
+function renderRecent() {
   const body = document.getElementById('recentBody');
-  if (body) body.innerHTML = transactions.slice(0,7).map(t => {
+  if (!body) return;
+  body.innerHTML = transactions.slice(0,7).map(t => {
     const cat = categories.find(c=>c.id===t.category_id);
-    const acc = t.type==='transfer'
+    const isMove = t.type==='transfer'||t.type==='withdrawal';
+    const acc = isMove
       ? (accounts.find(a=>a.id===t.account_id)?.name||'?')+' → '+(accounts.find(a=>a.id===t.to_account_id)?.name||'?')
       : accounts.find(a=>a.id===t.account_id)?.name||'—';
     const who = profiles.find(p=>p.id===t.user_id)?.display_name||'—';
-    const cls = t.type==='income'?'amt-pos':t.type==='transfer'?'amt-neu':'amt-neg';
-    const sgn = t.type==='income'?'+':t.type==='transfer'?'±':'-';
+    const cls = t.type==='income'?'amt-pos':isMove?'amt-neu':'amt-neg';
+    const sgn = t.type==='income'?'+':isMove?'±':'-';
+    const typeLabel = t.type==='investment'?'invest/save':t.type;
     return `<tr data-txid="${t.id}">
       <td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}</td>
       <td style="font-weight:500">${esc(t.description)}</td>
       <td style="font-size:12px;color:var(--text2)">${cat?cat.icon+' '+cat.name:'—'}</td>
-      <td><span class="badge badge-${t.type}">${t.type}</span></td>
+      <td><span class="badge badge-${t.type}">${esc(typeLabel)}</span></td>
       <td style="font-size:12px;color:var(--text2)">${esc(acc)}</td>
       <td style="font-size:12px;color:var(--text2)">${esc(who)}</td>
       <td style="text-align:right"><span class="${cls}">${sgn}${currency}${fmt(t.amount)}</span></td>
@@ -1433,7 +1613,7 @@ function renderTxPage() {
         if (!runBal[aid]) runBal[aid] = parseFloat(accounts.find(a=>a.id===aid)?.opening_balance)||0;
         if (t.type==='income'     && t.account_id===aid) runBal[aid] += parseFloat(t.amount)||0;
         if ((t.type==='spend'||t.type==='investment') && t.account_id===aid) runBal[aid] -= parseFloat(t.amount)||0;
-        if (t.type==='transfer') {
+        if (t.type==='transfer'||t.type==='withdrawal') {
           if (t.account_id===aid)    runBal[aid] -= parseFloat(t.amount)||0;
           if (t.to_account_id===aid) runBal[aid] += parseFloat(t.amount)||0;
         }
@@ -1447,15 +1627,19 @@ function renderTxPage() {
   if (head) {
     head.innerHTML = '<tr>' +
       '<th class="bulk-check"><input type="checkbox" id="selectAll" class="bulk-cb" onchange="toggleSelectAll(this.checked)"/></th>' +
-      (cols.includes('date')        ? '<th style="padding:12px 10px 10px">Date</th>' : '') +
-      (cols.includes('description') ? '<th>Description</th>' : '') +
-      (cols.includes('category')    ? '<th>Category</th>' : '') +
-      (cols.includes('type')        ? '<th>Type</th>' : '') +
-      (cols.includes('account')     ? '<th>Account</th>' : '') +
-      (cols.includes('person')      ? '<th>Person</th>' : '') +
-      (cols.includes('notes')       ? '<th>Notes</th>' : '') +
-      (cols.includes('recurring')   ? '<th>Recurring</th>' : '') +
-      (cols.includes('running_bal') ? '<th style="text-align:right">Balance</th>' : '') +
+      (cols.includes('date')         ? '<th style="padding:12px 10px 10px">Date</th>' : '') +
+      (cols.includes('description')  ? '<th>Description</th>' : '') +
+      (cols.includes('parent_group') ? '<th>Group</th>' : '') +
+      (cols.includes('category')     ? '<th>Category</th>' : '') +
+      (cols.includes('nature')       ? '<th>Nature</th>' : '') +
+      (cols.includes('spending_type')? '<th>Spending Type</th>' : '') +
+      (cols.includes('type')         ? '<th>Type</th>' : '') +
+      (cols.includes('recurring')    ? '<th>Rec.</th>' : '') +
+      (cols.includes('recur_freq')   ? '<th>Freq.</th>' : '') +
+      (cols.includes('account')      ? '<th>Account</th>' : '') +
+      (cols.includes('person')       ? '<th>Person</th>' : '') +
+      (cols.includes('notes')        ? '<th>Notes</th>' : '') +
+      (cols.includes('running_bal')  ? '<th style="text-align:right">Balance</th>' : '') +
       '<th style="text-align:right;padding-right:14px">Amount</th>' +
       '<th></th></tr>';
   }
@@ -1464,51 +1648,56 @@ function renderTxPage() {
 }
 
 function txRow(t, cols, runBal) {
-  // cols: array of column ids to show (from column picker)
-  // Falls back to showing all if called from dashboard/recent
   if (!Array.isArray(cols)) { cols = getVisibleCols(); runBal = {}; }
 
   const cat      = categories.find(c=>c.id===t.category_id);
   const parent   = cat?.parent_id ? categories.find(c=>c.id===cat.parent_id) : null;
-  const catLabel = parent ? parent.icon+' '+parent.name+' / '+cat.icon+' '+cat.name : (cat ? cat.icon+' '+cat.name : '—');
-  const accName  = t.type === 'transfer'
+  const group    = parent || (cat && !cat.parent_id ? cat : null);
+  const catLabel = parent ? cat.icon+' '+cat.name : (cat ? cat.icon+' '+cat.name : '—');
+  const groupLabel = group ? (group.icon||'')+'  '+group.name : '—';
+  const nature   = cat?.nature || parent?.nature || '';
+  const spendType= cat?.cat_type || parent?.cat_type || '';
+
+  const isTransfer   = t.type==='transfer';
+  const isWithdrawal = t.type==='withdrawal';
+  const accName  = (isTransfer||isWithdrawal)
     ? (accounts.find(a=>a.id===t.account_id)?.name||'?') + ' → ' + (accounts.find(a=>a.id===t.to_account_id)?.name||'?')
     : accounts.find(a=>a.id===t.account_id)?.name || '—';
 
-  // Signed amount display
-  const isIncome = t.type === 'income';
-  const isTransfer = t.type === 'transfer';
-  const isAdjust   = t.type === 'adjustment';
-  const signedAmt  = isIncome||isAdjust ? parseFloat(t.amount)||0 : -(parseFloat(t.amount)||0);
-  const amtCls     = isIncome ? 'amt-pos' : isTransfer ? 'amt-neu' : 'amt-neg';
-  const amtSign    = isIncome ? '+' : isTransfer ? '±' : '-';
+  const isIncome  = t.type==='income';
+  const isAdjust  = t.type==='adjustment';
+  const isNeutral = isTransfer||isWithdrawal;
+  const signedAmt = isIncome||isAdjust ? parseFloat(t.amount)||0 : -(parseFloat(t.amount)||0);
+  const amtCls    = isIncome?'amt-pos':isNeutral?'amt-neu':'amt-neg';
+  const amtSign   = isIncome?'+':isNeutral?'±':'-';
 
-  const who      = profiles.find(p=>p.id===t.user_id)?.display_name || '—';
-  const whoColor = t.user_id === currentUser?.id ? 'var(--green)' : 'var(--blue)';
-  const recurBadge = t.is_recurring ? ' <span class="badge badge-recurring">↻</span>' : '';
+  const who       = profiles.find(p=>p.id===t.user_id)?.display_name || '—';
+  const whoColor  = t.user_id===currentUser?.id?'var(--green)':'var(--blue)';
+  const typeLabel = t.type==='investment'?'invest/save':t.type;
 
-  // Running balance for this tx on its account
   let runBalCell = '';
   if (cols.includes('running_bal') && runBal) {
     const snap = runBal[t.id];
     const bal  = snap ? (snap[t.account_id] ?? null) : null;
-    if (bal !== null) {
-      runBalCell = `<td style="text-align:right"><span class="run-bal ${bal>=0?'pos':'neg'}">${bal>=0?'':'-'}${currency}${fmt(Math.abs(bal))}</span></td>`;
-    } else {
-      runBalCell = '<td></td>';
-    }
+    runBalCell = bal!==null
+      ? `<td style="text-align:right"><span class="run-bal ${bal>=0?'pos':'neg'}">${bal>=0?'':'-'}${currency}${fmt(Math.abs(bal))}</span></td>`
+      : '<td></td>';
   }
 
   return `<tr data-txid="${t.id}" class="${selectedTxIds.has(t.id)?'tx-selected':''}">
     <td class="bulk-check"><input type="checkbox" class="tx-bulk-cb bulk-cb" data-id="${t.id}" ${selectedTxIds.has(t.id)?'checked':''} onchange="toggleBulkSelect('${t.id}',this.checked)"/></td>
-    ${cols.includes('date')        ? `<td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}</td>` : ''}
-    ${cols.includes('description') ? `<td style="font-weight:500">${esc(t.description)}${recurBadge}</td>` : ''}
-    ${cols.includes('category')    ? `<td style="font-size:12px;color:var(--text2)">${esc(catLabel)}</td>` : ''}
-    ${cols.includes('type')        ? `<td><span class="badge badge-${t.type}">${t.type}</span></td>` : ''}
-    ${cols.includes('account')     ? `<td style="font-size:12px;color:var(--text2)">${esc(accName)}</td>` : ''}
-    ${cols.includes('person')      ? `<td style="font-size:12px;font-weight:500;color:${whoColor}">${esc(who)}</td>` : ''}
-    ${cols.includes('notes')       ? `<td style="font-size:11px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.notes||'')}</td>` : ''}
-    ${cols.includes('recurring')   ? `<td>${t.is_recurring?'<span class="badge badge-recurring">'+t.recur_freq+'</span>':''}</td>` : ''}
+    ${cols.includes('date')         ? `<td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}</td>` : ''}
+    ${cols.includes('description')  ? `<td style="font-weight:500">${esc(t.description)}</td>` : ''}
+    ${cols.includes('parent_group') ? `<td style="font-size:12px;color:var(--text2)">${esc(groupLabel)}</td>` : ''}
+    ${cols.includes('category')     ? `<td style="font-size:12px;color:var(--text2)">${esc(catLabel)}</td>` : ''}
+    ${cols.includes('nature')       ? `<td style="font-size:11px;color:var(--text3)">${esc(nature)}</td>` : ''}
+    ${cols.includes('spending_type')? `<td style="font-size:11px;color:var(--text3)">${esc(spendType)}</td>` : ''}
+    ${cols.includes('type')         ? `<td><span class="badge badge-${t.type}">${esc(typeLabel)}</span></td>` : ''}
+    ${cols.includes('recurring')    ? `<td style="text-align:center;font-size:12px">${t.is_recurring?'↻':'—'}</td>` : ''}
+    ${cols.includes('recur_freq')   ? `<td style="font-size:11px;color:var(--text3)">${t.recur_freq||'—'}</td>` : ''}
+    ${cols.includes('account')      ? `<td style="font-size:12px;color:var(--text2)">${esc(accName)}</td>` : ''}
+    ${cols.includes('person')       ? `<td style="font-size:12px;font-weight:500;color:${whoColor}">${esc(who)}</td>` : ''}
+    ${cols.includes('notes')        ? `<td style="font-size:11px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.notes||'')}</td>` : ''}
     ${runBalCell}
     <td style="text-align:right"><span class="${amtCls}">${amtSign}${currency}${fmt(t.amount)}</span></td>
     <td style="white-space:nowrap">
@@ -1748,21 +1937,24 @@ function selType(type) {
     el.className = 'to';
     if (el.dataset.t === type) el.className = `to to-${type}`;
   });
-  const isTransfer = type === 'transfer';
-  // Account rows
+  const isMovement = type === 'transfer' || type === 'withdrawal';
   const txAccRow      = document.getElementById('txAccRow');
   const txTransferRow = document.getElementById('txTransferRow');
-  if (txAccRow)      txAccRow.style.display     = isTransfer ? 'none' : '';
-  if (txTransferRow) txTransferRow.style.display = isTransfer ? 'block' : 'none';
-  // Hide category + recurring for transfers — they don't apply
+  if (txAccRow)      txAccRow.style.display     = isMovement ? 'none' : '';
+  if (txTransferRow) txTransferRow.style.display = isMovement ? 'block' : 'none';
+  // Update from/to labels for withdrawal
+  const fromLbl = document.querySelector('#txTransferRow .fg:first-child .fl');
+  const toLbl   = document.querySelector('#txTransferRow .fg:last-child .fl');
+  if (fromLbl) fromLbl.textContent = type==='withdrawal' ? 'From (savings/investment)' : 'From account';
+  if (toLbl)   toLbl.textContent   = type==='withdrawal' ? 'To (checking/cash)'        : 'To account';
   const catRow   = document.getElementById('txCat')?.closest('.fg2');
   const recurRow = document.querySelector('.recur-row');
-  if (catRow)   catRow.style.display   = isTransfer ? 'none' : '';
-  if (recurRow) recurRow.style.display = isTransfer ? 'none' : '';
-  // Auto-set description hint for transfers
+  if (catRow)   catRow.style.display   = isMovement ? 'none' : '';
+  if (recurRow) recurRow.style.display = isMovement ? 'none' : '';
   const descEl = document.getElementById('txDesc');
-  if (descEl && isTransfer && !descEl.value) descEl.placeholder = 'e.g. Move to savings';
-  else if (descEl && !isTransfer) descEl.placeholder = 'What was this?';
+  if (descEl && isMovement && !descEl.value)
+    descEl.placeholder = type==='withdrawal' ? 'e.g. Withdraw from savings' : 'e.g. Move to savings';
+  else if (descEl && !isMovement) descEl.placeholder = 'What was this?';
 }
 
 function toggleRecur() {
@@ -1956,7 +2148,10 @@ function goTo(page) {
   const navEl = document.querySelector(`[onclick="goTo('${page}')"]`);
   if (navEl) navEl.classList.add('active');
   if (window.innerWidth <= 768) closeMobileMenu();
-  renderAll();
+  // Page-specific renders
+  if (page==='forecast')  renderForecast();
+  if (page==='recurring') renderRecurPage();
+  else renderAll();
 }
 
 function showScreen(id) {
@@ -2026,38 +2221,39 @@ function exportCSV() {
 
   function signedAmt(t) {
     const n = parseFloat(t.amount) || 0;
-    if (t.type === 'income')     return n;
-    if (t.type === 'adjustment') return n;
+    if (t.type==='income' || t.type==='adjustment') return n;
     return -n;
   }
 
   const header = [
     'Date','Description',
+    'Parent Group','Category','Nature','Spending Type',
+    'Transaction Type','Recurring','Frequency',
     'Amount (signed)','Amount (absolute)','Currency',
-    'Type','Category Group','Category','Nature','Spending Type','Default Tx Type',
-    'Account','To Account (transfers)',
+    'Account','To Account','Balance',
     'Person','Notes',
-    'Recurring','Frequency','Recurring Until',
-    'Transaction ID','Created At'
+    'Recurring Until','Transaction ID','Created At'
   ];
 
   const rows = transactions.map(t => {
     const cat      = categories.find(c=>c.id===t.category_id);
     const parent   = cat?.parent_id ? categories.find(c=>c.id===cat.parent_id) : null;
-    const catGroup = parent?.name || '';
-    const catName  = cat?.name || '';
+    const group    = parent || (!cat?.parent_id ? cat : null);
     const acc      = accounts.find(a=>a.id===t.account_id)?.name  || '';
     const toAcc    = accounts.find(a=>a.id===t.to_account_id)?.name || '';
     const person   = profiles.find(p=>p.id===t.user_id)?.display_name || '';
+    const typeLabel= t.type==='investment'?'invest/save':t.type;
     return [
       t.date, csvQ(t.description),
+      csvQ(group?.name||''), csvQ(cat?.name||''),
+      csvQ(cat?.nature||parent?.nature||''),
+      csvQ(cat?.cat_type||parent?.cat_type||''),
+      typeLabel,
+      t.is_recurring?'yes':'no', t.recur_freq||'',
       signedAmt(t), parseFloat(t.amount)||0, currency,
-      t.type, csvQ(catGroup), csvQ(catName),
-      csvQ(cat?.nature||''), csvQ(cat?.cat_type||''), csvQ(cat?.default_tx_type||''),
-      csvQ(acc), csvQ(toAcc),
+      csvQ(acc), csvQ(toAcc), '',
       csvQ(person), csvQ(t.notes||''),
-      t.is_recurring ? 'yes' : 'no', t.recur_freq||'', t.recur_until||'',
-      t.id, t.created_at||''
+      t.recur_until||'', t.id, t.created_at||''
     ].join(',');
   });
 
@@ -2155,7 +2351,7 @@ function renderAccChart() {
       transactions.filter(t=>new Date(t.date+'T00:00:00')<=cutoff).forEach(t=>{
         if(t.type==='income'&&t.account_id===a.id)     bal+=Number(t.amount);
         if((t.type==='spend'||t.type==='investment')&&t.account_id===a.id) bal-=Number(t.amount);
-        if(t.type==='transfer'){
+        if(t.type==='transfer'||t.type==='withdrawal'){
           if(t.account_id===a.id)    bal-=Number(t.amount);
           if(t.to_account_id===a.id) bal+=Number(t.amount);
         }
@@ -2714,16 +2910,13 @@ function openAdjustModal(accId) {
 
 function calcBalance(accId, upToDate) {
   const acc = accounts.find(a=>a.id===accId);
-  // Explicitly parse opening_balance — can be string/null from DB
   let bal = parseFloat(acc?.opening_balance) || 0;
-  const txs = upToDate
-    ? transactions.filter(t => t.date <= upToDate)
-    : transactions;
+  const txs = upToDate ? transactions.filter(t => t.date <= upToDate) : transactions;
   txs.forEach(t => {
     if (t.type==='adjustment' && t.account_id===accId) { bal += parseFloat(t.amount)||0; return; }
-    if (t.type==='income'     && t.account_id===accId) bal += parseFloat(t.amount)||0;
+    if (t.type==='income'  && t.account_id===accId) bal += parseFloat(t.amount)||0;
     if ((t.type==='spend'||t.type==='investment') && t.account_id===accId) bal -= parseFloat(t.amount)||0;
-    if (t.type==='transfer') {
+    if ((t.type==='transfer'||t.type==='withdrawal')) {
       if (t.account_id===accId)    bal -= parseFloat(t.amount)||0;
       if (t.to_account_id===accId) bal += parseFloat(t.amount)||0;
     }
@@ -2888,7 +3081,6 @@ let budgetView   = 'group';    // nature | group | sub
 // CATEGORY ROLLUP HELPERS
 // ═══════════════════════════════════════════════════════════════
 
-// Get all transactions for current month, spend only
 function monthlySpend() {
   const now = new Date(), m = now.getMonth(), y = now.getFullYear();
   return transactions.filter(t => {
@@ -3299,16 +3491,20 @@ function setBudgetView(view, el) {
 // COLUMN PICKER
 // ═══════════════════════════════════════════════════════════════
 const ALL_COLUMNS = [
-  { id:'date',        label:'Date',            default:true  },
-  { id:'description', label:'Description',     default:true  },
-  { id:'category',    label:'Category',        default:true  },
-  { id:'type',        label:'Type',            default:true  },
-  { id:'account',     label:'Account',         default:true  },
-  { id:'person',      label:'Person',          default:true  },
-  { id:'notes',       label:'Notes',           default:false },
-  { id:'amount',      label:'Amount',          default:true  },
-  { id:'running_bal', label:'Running balance', default:false },
-  { id:'recurring',   label:'Recurring',       default:false },
+  { id:'date',        label:'Date',               default:true  },
+  { id:'description', label:'Description',        default:true  },
+  { id:'parent_group',label:'Parent Group',       default:false },
+  { id:'category',    label:'Category',           default:true  },
+  { id:'nature',      label:'Nature',             default:false },
+  { id:'spending_type',label:'Spending Type',     default:false },
+  { id:'type',        label:'Transaction Type',   default:true  },
+  { id:'recurring',   label:'Recurring',          default:false },
+  { id:'recur_freq',  label:'Frequency',          default:false },
+  { id:'amount',      label:'Amount',             default:true  },
+  { id:'account',     label:'Account',            default:true  },
+  { id:'running_bal', label:'Balance',            default:false },
+  { id:'person',      label:'Person',             default:true  },
+  { id:'notes',       label:'Notes',              default:false },
 ];
 
 let visibleCols = null;  // null = use defaults
@@ -3777,7 +3973,276 @@ document.addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// DRAG-TO-REORDER — CATEGORIES
+// RECURRING PAGE
+// ═══════════════════════════════════════════════════════════════
+function renderRecurPage() {
+  const el = document.getElementById('recurPageContent'); if (!el) return;
+  const recurring = transactions.filter(t=>t.is_recurring);
+  const now = new Date();
+  const m = now.getMonth(), y = now.getFullYear();
+
+  set('recurPageSub', recurring.length + ' scheduled transaction' + (recurring.length!==1?'s':''));
+
+  if (!recurring.length) {
+    el.innerHTML='<div class="card"><div class="empty">No recurring transactions yet — add a transaction and mark it as recurring.</div></div>';
+    const sc = document.getElementById('recurSummaryCard'); if(sc) sc.style.display='none';
+    return;
+  }
+
+  // Compute expected this month from recurring
+  let monthTotal = 0, dueCount = 0;
+  recurring.forEach(t => {
+    if (!freqMatchesMonth(t.recur_freq, t.date, m, y)) return;
+    monthTotal += Number(t.amount);
+    // Check if logged this cycle — look for non-recurring matching tx this month
+    const logged = transactions.some(x =>
+      !x.is_recurring && x.description === t.description &&
+      new Date(x.date+'T00:00:00').getMonth()===m && new Date(x.date+'T00:00:00').getFullYear()===y
+    );
+    if (!logged) dueCount++;
+  });
+
+  const sc = document.getElementById('recurSummaryCard');
+  if (sc) { sc.style.display=''; set('recurMonthTotal', currency+fmt(monthTotal)); set('recurDueCount', dueCount || '—'); }
+
+  el.innerHTML = `<div class="card" style="padding:0;overflow:hidden">
+    <table class="tbl">
+      <thead><tr>
+        <th>Description</th><th>Category</th><th>Account</th>
+        <th style="text-align:right">Amount</th><th>Frequency</th>
+        <th>Until</th><th>This month</th><th></th>
+      </tr></thead>
+      <tbody>
+      ${recurring.map(t => {
+        const cat = categories.find(c=>c.id===t.category_id);
+        const acc = accounts.find(a=>a.id===t.account_id);
+        const cls = t.type==='income'?'amt-pos':'amt-neg';
+        const sgn = t.type==='income'?'+':'-';
+        const matches = freqMatchesMonth(t.recur_freq, t.date, m, y);
+        const logged  = matches && transactions.some(x =>
+          !x.is_recurring && x.description===t.description &&
+          new Date(x.date+'T00:00:00').getMonth()===m && new Date(x.date+'T00:00:00').getFullYear()===y
+        );
+        const status = !matches ? '' :
+          logged ? '<span class="recur-status logged">✓ logged</span>' :
+                   '<span class="recur-status due">due</span>';
+        return `<tr>
+          <td style="font-weight:500">${esc(t.description)}</td>
+          <td style="font-size:12px;color:var(--text2)">${cat?cat.icon+' '+cat.name:'—'}</td>
+          <td style="font-size:12px;color:var(--text2)">${acc?.name||'—'}</td>
+          <td style="text-align:right"><span class="${cls}">${sgn}${currency}${fmt(t.amount)}</span></td>
+          <td style="font-size:12px;color:var(--text2)">${t.recur_freq||'—'}</td>
+          <td style="font-size:11px;color:var(--text3)">${t.recur_until||'ongoing'}</td>
+          <td>${status}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="logRecurNow('${t.id}')">log now</button>
+            <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="editTx('${t.id}')">edit</button>
+          </td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function freqMatchesMonth(freq, startDate, m, y) {
+  if (!freq || !startDate) return false;
+  const start = new Date(startDate+'T00:00:00');
+  if (freq==='monthly' || freq==='fortnightly') return true;
+  if (freq==='yearly') return start.getMonth()===m;
+  if (freq==='weekly' || freq==='daily') return true;
+  return true;
+}
+
+function logRecurNow(id) {
+  const t = transactions.find(x=>x.id===id);
+  if (!t) return;
+  openAddTx({ type:t.type, description:t.description, amount:t.amount,
+    category_id:t.category_id, account_id:t.account_id, notes:t.notes,
+    date: new Date().toISOString().split('T')[0] });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FORECAST PAGE
+// ═══════════════════════════════════════════════════════════════
+let forecastTab = 'month';
+
+function setForecastTab(tab, el) {
+  forecastTab = tab;
+  el.closest('.view-tabs').querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderForecast();
+}
+
+function renderForecast() {
+  const el = document.getElementById('forecastContent'); if (!el) return;
+  if (forecastTab==='month') renderForecastMonth(el);
+  else renderForecastAnnual(el);
+}
+
+function projectMonth(m, y) {
+  // Projection = recurring amounts for that month + 3-month rolling avg for variable spend by category
+  const recurring = transactions.filter(t => t.is_recurring && freqMatchesMonth(t.recur_freq, t.date, m, y));
+  const recurIncome = recurring.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount),0);
+  const recurSpend  = recurring.filter(t=>t.type==='spend').reduce((a,t)=>a+Number(t.amount),0);
+  const recurInvest = recurring.filter(t=>t.type==='investment').reduce((a,t)=>a+Number(t.amount),0);
+
+  // 3-month rolling average from the 3 months before (m, y)
+  let avgSpend = 0, avgIncome = 0, avgInvest = 0;
+  for (let i=1; i<=3; i++) {
+    const pd = new Date(y, m-i, 1);
+    const pm = pd.getMonth(), py = pd.getFullYear();
+    const pastTxs = transactions.filter(t => {
+      const d = new Date(t.date+'T00:00:00');
+      return d.getMonth()===pm && d.getFullYear()===py;
+    });
+    avgIncome += pastTxs.filter(t=>t.type==='income' && !t.is_recurring).reduce((a,t)=>a+Number(t.amount),0);
+    avgSpend  += pastTxs.filter(t=>t.type==='spend'  && !t.is_recurring).reduce((a,t)=>a+Number(t.amount),0);
+    avgInvest += pastTxs.filter(t=>t.type==='investment' && !t.is_recurring).reduce((a,t)=>a+Number(t.amount),0);
+  }
+  return {
+    income:  recurIncome + avgIncome/3,
+    spend:   recurSpend  + avgSpend/3,
+    invest:  recurInvest + avgInvest/3,
+  };
+}
+
+function getActualMonth(m, y) {
+  const txs = transactions.filter(t => {
+    const d = new Date(t.date+'T00:00:00');
+    return d.getMonth()===m && d.getFullYear()===y;
+  });
+  return {
+    income: txs.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount),0),
+    spend:  txs.filter(t=>t.type==='spend').reduce((a,t)=>a+Number(t.amount),0),
+    invest: txs.filter(t=>t.type==='investment').reduce((a,t)=>a+Number(t.amount),0),
+  };
+}
+
+function renderForecastMonth(el) {
+  const now = new Date();
+  const m = now.getMonth(), y = now.getFullYear();
+  const actual  = getActualMonth(m, y);
+  const proj    = projectMonth(m, y);
+
+  // Next month
+  const nd = new Date(y, m+1, 1);
+  const projNext = projectMonth(nd.getMonth(), nd.getFullYear());
+  const nextLabel = nd.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const thisLabel = now.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+
+  const pct = (a,p) => p>0 ? Math.min((a/p)*100,100) : 0;
+  const bar = (a,p,cls) => `<div style="height:6px;background:var(--surface2);border-radius:3px;margin-top:4px;overflow:hidden">
+    <div style="height:100%;width:${pct(a,p)}%;background:${cls};border-radius:3px;transition:width .4s"></div></div>`;
+
+  el.innerHTML = `
+    <div class="grid-2" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-title">${thisLabel} — actual vs projected</div>
+        ${[
+          {label:'Income',  act:actual.income, proj:proj.income,  cls:'var(--green)'},
+          {label:'Spending',act:actual.spend,  proj:proj.spend,   cls:'var(--red)'},
+          {label:'Invested',act:actual.invest, proj:proj.invest,  cls:'var(--blue)'},
+        ].map(r=>`
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">
+              <span style="font-weight:500">${r.label}</span>
+              <span><span style="font-family:'DM Mono',monospace">${currency}${fmt(r.act)}</span>
+              <span style="color:var(--text3);font-size:11px"> / proj ${currency}${fmt(r.proj)}</span></span>
+            </div>
+            ${bar(r.act,r.proj,r.cls)}
+          </div>`).join('')}
+        <div style="padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)">
+          Projected net: <strong style="color:${proj.income-proj.spend>=0?'var(--green)':'var(--red)'}">${currency}${fmt(proj.income-proj.spend)}</strong>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">${nextLabel} — forecast</div>
+        ${[
+          {label:'Expected income',   val:projNext.income, cls:'var(--green)'},
+          {label:'Expected spending', val:projNext.spend,  cls:'var(--red)'},
+          {label:'Expected invest',   val:projNext.invest, cls:'var(--blue)'},
+        ].map(r=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px">${r.label}</span>
+            <span style="font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:${r.cls}">${currency}${fmt(r.val)}</span>
+          </div>`).join('')}
+        <div style="padding-top:10px;font-size:12px;color:var(--text2)">
+          Projected net: <strong style="color:${projNext.income-projNext.spend>=0?'var(--green)':'var(--red)'}">${currency}${fmt(projNext.income-projNext.spend)}</strong>
+        </div>
+        <div class="f-hint" style="margin-top:8px">Based on recurring + 3-month average</div>
+      </div>
+    </div>`;
+}
+
+function renderForecastAnnual(el) {
+  const now = new Date();
+  const curM = now.getMonth(), curY = now.getFullYear();
+  const rows = [];
+  let totActIncome=0, totActSpend=0, totActInvest=0;
+  let totProjIncome=0, totProjSpend=0, totProjInvest=0;
+
+  for (let i=0; i<12; i++) {
+    const d  = new Date(curY, i, 1);
+    const m  = d.getMonth(), y = d.getFullYear();
+    const isPast    = y<curY || (y===curY && m<curM);
+    const isCurrent = y===curY && m===curM;
+    const act  = getActualMonth(m, y);
+    const proj = projectMonth(m, y);
+    const label = d.toLocaleDateString('en-US',{month:'short'});
+
+    if (isPast||isCurrent) { totActIncome+=act.income; totActSpend+=act.spend; totActInvest+=act.invest; }
+    totProjIncome+=proj.income; totProjSpend+=proj.spend; totProjInvest+=proj.invest;
+
+    rows.push({ label, isPast, isCurrent, act, proj });
+  }
+
+  const fc = (v,cls='') => `<span class="${cls}" style="font-family:'DM Mono',monospace">${currency}${fmt(v)}</span>`;
+  const fcp = (v) => `<span class="fc-proj" style="font-family:'DM Mono',monospace">${currency}${fmt(v)}</span>`;
+
+  el.innerHTML = `
+    <div class="card" style="overflow-x:auto">
+      <table class="forecast-tbl">
+        <thead><tr>
+          <th>Month</th>
+          <th>Act. Income</th><th>Proj. Income</th>
+          <th>Act. Spend</th><th>Proj. Spend</th>
+          <th>Act. Invest</th><th>Proj. Invest</th>
+          <th>Act. Net</th><th>Proj. Net</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r => {
+            const cls = r.isCurrent?'fc-current':r.isPast?'':'fc-future';
+            const actNet  = r.act.income - r.act.spend;
+            const projNet = r.proj.income - r.proj.spend;
+            return `<tr class="${cls}">
+              <td>${r.label}${r.isCurrent?' <span style="font-size:10px;color:var(--green)">now</span>':''}</td>
+              <td>${r.isPast||r.isCurrent ? fc(r.act.income,'fc-pos') : '—'}</td>
+              <td>${fcp(r.proj.income)}</td>
+              <td>${r.isPast||r.isCurrent ? fc(r.act.spend,'fc-neg') : '—'}</td>
+              <td>${fcp(r.proj.spend)}</td>
+              <td>${r.isPast||r.isCurrent ? fc(r.act.invest) : '—'}</td>
+              <td>${fcp(r.proj.invest)}</td>
+              <td>${r.isPast||r.isCurrent ? fc(actNet,actNet>=0?'fc-pos':'fc-neg') : '—'}</td>
+              <td>${fcp(projNet)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+        <tfoot>
+          <tr class="fc-total">
+            <td>Total ${curY}</td>
+            <td>${fc(totActIncome,'fc-pos')}</td><td>${fcp(totProjIncome)}</td>
+            <td>${fc(totActSpend,'fc-neg')}</td><td>${fcp(totProjSpend)}</td>
+            <td>${fc(totActInvest)}</td><td>${fcp(totProjInvest)}</td>
+            <td>${fc(totActIncome-totActSpend,(totActIncome-totActSpend)>=0?'fc-pos':'fc-neg')}</td>
+            <td>${fcp(totProjIncome-totProjSpend)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════════
 let draggedCatId = null;
 let draggedCatParent = null;
