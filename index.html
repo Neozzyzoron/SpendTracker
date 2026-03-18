@@ -250,17 +250,101 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 .mobile-menu-btn{display:none;position:fixed;top:12px;left:12px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:7px 9px;cursor:pointer;}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99;}
 
+/* TX card view (mobile only) */
+.tx-card-list{display:none;flex-direction:column;gap:8px;}
+.tx-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;transition:box-shadow .15s;}
+.tx-card:active{box-shadow:var(--sh2);}
+.tx-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.tx-card-desc{font-weight:600;font-size:14px;flex:1;margin-right:8px;}
+.tx-card-amt{font-family:'DM Mono',monospace;font-size:15px;font-weight:700;white-space:nowrap;}
+.tx-card-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--text3);}
+.tx-card-actions{display:flex;gap:6px;margin-top:8px;}
+
+/* ── INLINE ROW EDIT (desktop) ── */
+.tx-inline-edit td{padding:4px 6px !important;background:var(--green-l) !important;}
+.tx-inline-edit .fi,.tx-inline-edit .fs{padding:4px 7px;font-size:12px;border-radius:4px;border:1px solid var(--green);background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;width:100%;min-width:0;}
+.tx-inline-edit .fi:focus,.tx-inline-edit .fs:focus{outline:none;box-shadow:0 0 0 2px var(--green-l);}
+.inline-save-btn{background:var(--green);color:white;border:none;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.inline-save-btn:hover{background:#245030;}
+.inline-cancel-btn{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;}
+
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%);}
   .sidebar.open{transform:translateX(0);}
   .mobile-menu-btn{display:flex;}
   .sidebar-overlay.open{display:block;}
-  .main{margin-left:0;padding:16px;padding-top:56px;}
-  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .main{margin-left:0;padding:12px;padding-top:54px;}
+
+  /* Stats grid — 2 cols, clamp font size for long currency values */
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .stat-value{font-size:16px;letter-spacing:-0.4px;word-break:break-all;}
+  .stat-card{padding:12px 12px;}
+  .stat-label{font-size:9px;}
+
+  /* Grids */
   .grid-2,.grid-3{grid-template-columns:1fr;}
-  .acc-grid{grid-template-columns:repeat(2,1fr);}
+  .acc-grid{grid-template-columns:1fr 1fr;}
   .fg2{grid-template-columns:1fr;}
-  .type-sel{grid-template-columns:repeat(2,1fr);}
+
+  /* Type selector — 2 cols on mobile so 6 buttons fit cleanly */
+  .type-sel{grid-template-columns:repeat(2,1fr) !important;}
+
+  /* Page header — stack vertically */
+  .page-header{flex-direction:column;gap:8px;align-items:flex-start;}
+  .page-header .btn-row{flex-wrap:wrap;width:100%;}
+  .page-header .btn-row .btn{flex:1;min-width:calc(50% - 4px);justify-content:center;font-size:12px;}
+
+  /* Filters — search full width, dropdowns 2 per row */
+  .filters{gap:6px;}
+  .filters .fsearch{min-width:100%;order:-1;}
+  .filters .fsel{flex:1;min-width:calc(50% - 3px);font-size:11px;}
+
+  /* Hide table, show cards on mobile */
+  #txFlatView .card{display:none;}
+  .tx-card-list{display:flex;}
+
+  /* Bottom sheet modals */
+  .overlay{align-items:flex-end;}
+  .modal{width:100% !important;max-width:100% !important;border-radius:20px 20px 0 0;max-height:88vh;overflow-y:auto;transform:translateY(100%);margin:0;padding:18px 16px 28px;}
+  .overlay.open .modal{transform:translateY(0);}
+
+  /* Forecast table — horizontal scroll with sticky month col */
+  .card:has(.forecast-tbl){overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .forecast-tbl{min-width:680px;font-size:11px;}
+  .forecast-tbl td:first-child,.forecast-tbl th:first-child{position:sticky;left:0;background:var(--surface);z-index:1;}
+  .forecast-tbl tr.fc-current td:first-child{background:var(--green-l);}
+  .forecast-tbl tr.fc-total td:first-child{background:var(--surface2);}
+
+  /* View tabs smaller */
+  .view-tab{padding:4px 7px;font-size:11px;}
+
+  /* Cat tree — always show actions on mobile (no hover) */
+  .cat-group-actions,.cat-child-actions{opacity:1;}
+  .cat-group-meta,.cat-child-meta{display:none;}
+
+  /* Hide drag handles on mobile */
+  .drag-handle{display:none;}
+
+  /* Bulk bar */
+  .bulk-bar{flex-wrap:wrap;font-size:12px;}
+
+  /* Settings button rows — wrap nicely */
+  .s-title .btn-row{flex-wrap:wrap;gap:4px;}
+  .s-title .btn-row .btn{font-size:10px;padding:3px 7px;}
+
+  /* Account card actions always visible */
+  .acc-card-actions{opacity:1;}
+
+  /* Recurring page table — scroll */
+  #recurPageContent .card{overflow-x:auto;}
+  #recurPageContent .tbl{min-width:560px;font-size:11.5px;}
+
+  @media(max-width:400px){
+    .acc-grid{grid-template-columns:1fr;}
+    .stats-grid{grid-template-columns:1fr;}
+    .stat-value{font-size:18px;}
+    .page-header .btn-row .btn{font-size:11px;}
+  }
 }
 
 /* ── CATEGORY MANAGER ── */
@@ -353,7 +437,9 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 
 .badge-withdrawal{background:#f0e8f5;color:#7A5A8A;}
 .badge-adjustment{background:var(--surface2);color:var(--text2);}
+.badge-debt_payment{background:#faeae7;color:#c8553d;border:1px solid #f5c6be;}
 .to-withdrawal{background:#f0e8f5;color:#7A5A8A;border-color:#7A5A8A;}
+.to-debt_payment{background:#faeae7;color:#c8553d;border-color:#c8553d;}
 
 /* ── FORECAST TABLE ── */
 .forecast-tbl{width:100%;border-collapse:collapse;font-size:12px;}
@@ -578,7 +664,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
       </div>
       <div class="filters">
         <input class="fsearch" id="txSearch" placeholder="Search…" oninput="renderTxPage()">
-        <select class="fsel" id="fType" onchange="renderTxPage()"><option value="">All types</option><option value="spend">Spend</option><option value="income">Income</option><option value="investment">Invest/Save</option><option value="transfer">Transfer</option><option value="withdrawal">Withdrawal</option></select>
+        <select class="fsel" id="fType" onchange="renderTxPage()"><option value="">All types</option><option value="spend">Spend</option><option value="income">Income</option><option value="investment">Invest/Save</option><option value="debt_payment">Debt Payment</option><option value="transfer">Transfer</option><option value="withdrawal">Withdrawal</option><option value="adjustment">Adjustment</option></select>
         <select class="fsel" id="fCat" onchange="renderTxPage()"></select>
         <select class="fsel" id="fAcc" onchange="renderTxPage()"></select>
         <select class="fsel" id="fPerson" onchange="renderTxPage()"></select>
@@ -592,6 +678,8 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
           </table>
           <div id="txEmpty" class="empty" style="display:none">No transactions match</div>
         </div>
+        <!-- Mobile card list (shown instead of table on small screens) -->
+        <div class="tx-card-list" id="txCardList"></div>
       </div>
       <div id="txGroupedView" style="display:none"></div>
     </div>
@@ -758,8 +846,8 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
       <!-- RECURRING -->
       <div class="s-section">
         <div class="s-title">Recurring transactions</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Manage recurring transactions on the dedicated <a href="#" onclick="goTo('recurring');closeModal && closeModal();return false;" style="color:var(--green);font-weight:500">Recurring page</a>.</p>
         <div id="recurList"></div>
-        <div class="f-hint" style="margin-top:8px">Mark any transaction as recurring when adding it.</div>
       </div>
 
       <button class="btn btn-danger" onclick="signOutAndClear()">Sign out</button>
@@ -777,11 +865,12 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <div id="qaStrip" style="display:none"></div>
     <div class="fg"><label class="fl">Type</label>
       <div class="type-sel" style="grid-template-columns:repeat(3,1fr)">
-        <div class="to" data-t="spend"      onclick="selType('spend')">spend</div>
-        <div class="to" data-t="income"     onclick="selType('income')">income</div>
-        <div class="to" data-t="investment" onclick="selType('investment')">invest / save</div>
-        <div class="to" data-t="transfer"   onclick="selType('transfer')">transfer</div>
-        <div class="to" data-t="withdrawal" onclick="selType('withdrawal')">withdrawal</div>
+        <div class="to" data-t="spend"        onclick="selType('spend')">spend</div>
+        <div class="to" data-t="income"       onclick="selType('income')">income</div>
+        <div class="to" data-t="investment"   onclick="selType('investment')">invest / save</div>
+        <div class="to" data-t="transfer"     onclick="selType('transfer')">transfer</div>
+        <div class="to" data-t="withdrawal"   onclick="selType('withdrawal')">withdrawal</div>
+        <div class="to" data-t="debt_payment" onclick="selType('debt_payment')">debt payment</div>
       </div>
     </div>
     <div class="fg2">
@@ -796,8 +885,15 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <!-- Transfer from/to accounts -->
     <div id="txTransferRow" style="display:none">
       <div class="fg2">
-        <div class="fg" style="margin:0"><label class="fl">From account</label><select class="fs" id="txFrom"></select></div>
-        <div class="fg" style="margin:0"><label class="fl">To account</label><select class="fs" id="txTo"></select></div>
+        <div class="fg" style="margin:0"><label class="fl" id="txFromLbl">From account</label><select class="fs" id="txFrom"></select></div>
+        <div class="fg" style="margin:0"><label class="fl" id="txToLbl">To account</label><select class="fs" id="txTo"></select></div>
+      </div>
+    </div>
+    <!-- Debt payment: source account + debt account -->
+    <div id="txDebtRow" style="display:none">
+      <div class="fg2">
+        <div class="fg" style="margin:0"><label class="fl">Pay from account</label><select class="fs" id="txDebtFrom"></select></div>
+        <div class="fg" style="margin:0"><label class="fl">Debt account</label><select class="fs" id="txDebtAcc"></select></div>
       </div>
     </div>
     <div class="fg" style="margin-top:2px"><label class="fl">Notes</label><textarea class="ft" id="txNotes" placeholder="Optional…"></textarea></div>
@@ -806,7 +902,6 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
       <label><input type="checkbox" id="txRecur" onchange="toggleRecur()"/> Recurring transaction</label>
       <div id="recurFields" style="display:none;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;width:100%">
         <select class="fs" id="txRecurFreq" style="flex:1"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option><option value="monthly" selected>Monthly</option><option value="yearly">Yearly</option></select>
-        <div style="display:flex;align-items:center;gap:6px;flex:1"><label class="fl" style="margin:0;white-space:nowrap">Until</label><input class="fi" id="txRecurUntil" type="date" style="flex:1"/></div>
       </div>
     </div>
     <div class="f-actions" style="justify-content:space-between">
@@ -845,7 +940,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <div class="fg">
       <label class="fl">Opening balance</label>
       <input class="fi" id="accOpeningBal" type="number" step="0.01" placeholder="0.00"/>
-      <div class="f-hint">The starting balance of this account. Transactions are calculated on top.</div>
+      <div class="f-hint" id="openingBalHint">The starting balance of this account. Transactions are calculated on top.</div>
     </div>
     <div class="fg">
       <label class="fl">Account color</label>
@@ -959,6 +1054,72 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <div class="f-actions">
       <button class="btn btn-ghost" onclick="closeModal('budgetModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveBudget()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- FULL EDIT TRANSACTION MODAL -->
+<div class="overlay" id="txEditModal">
+  <div class="modal" style="width:660px">
+    <div class="modal-title">Edit Transaction</div>
+    <div class="fg"><label class="fl">Type</label>
+      <div class="type-sel" style="grid-template-columns:repeat(3,1fr)">
+        <div class="to" data-et="spend"      onclick="selEditType('spend')">spend</div>
+        <div class="to" data-et="income"     onclick="selEditType('income')">income</div>
+        <div class="to" data-et="investment" onclick="selEditType('investment')">invest / save</div>
+        <div class="to" data-et="transfer"   onclick="selEditType('transfer')">transfer</div>
+        <div class="to" data-et="withdrawal" onclick="selEditType('withdrawal')">withdrawal</div>
+      </div>
+    </div>
+    <div class="fg2">
+      <div class="fg" style="margin:0"><label class="fl">Amount</label><input class="fi" id="etAmt" type="number" step="0.01"/></div>
+      <div class="fg" style="margin:0"><label class="fl">Date</label><input class="fi" id="etDate" type="date"/></div>
+    </div>
+    <div class="fg"><label class="fl">Description</label><input class="fi" id="etDesc"/></div>
+    <div class="fg2">
+      <div class="fg" style="margin:0"><label class="fl">Category</label><select class="fs" id="etCat"></select></div>
+      <div class="fg" style="margin:0" id="etAccRow"><label class="fl">Account</label><select class="fs" id="etAcc"></select></div>
+    </div>
+    <div id="etTransferRow" style="display:none"><div class="fg2">
+      <div class="fg" style="margin:0"><label class="fl" id="etFromLbl">From account</label><select class="fs" id="etFrom"></select></div>
+      <div class="fg" style="margin:0"><label class="fl" id="etToLbl">To account</label><select class="fs" id="etTo"></select></div>
+    </div></div>
+    <div id="etDebtRow" style="display:none"><div class="fg2">
+      <div class="fg" style="margin:0"><label class="fl">Pay from account</label><select class="fs" id="etDebtFrom"></select></div>
+      <div class="fg" style="margin:0"><label class="fl">Debt account</label><select class="fs" id="etDebtAcc"></select></div>
+    </div></div>
+    <div class="fg2">
+      <div class="fg" style="margin:0"><label class="fl">Nature override</label>
+        <select class="fs" id="etNature">
+          <option value="">— from category —</option>
+          <option value="Income">Income</option><option value="Essentials">Essentials</option>
+          <option value="Variables">Variables</option><option value="Investments">Investments</option>
+          <option value="Debt">Debt</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0"><label class="fl">Spending type override</label>
+        <select class="fs" id="etSpendType">
+          <option value="">— from category —</option>
+          <option value="Fixed">Fixed</option><option value="Variable">Variable</option>
+          <option value="One-time">One-time</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Notes</label><textarea class="ft" id="etNotes" style="min-height:50px"></textarea></div>
+    <div class="recur-row">
+      <label><input type="checkbox" id="etRecur" onchange="toggleEditRecur()"/> Recurring transaction</label>
+      <div id="etRecurFields" style="display:none;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;width:100%">
+        <select class="fs" id="etRecurFreq" style="flex:1">
+          <option value="daily">Daily</option><option value="weekly">Weekly</option>
+          <option value="fortnightly">Fortnightly</option><option value="monthly" selected>Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+    </div>
+    <div class="f-actions">
+      <button class="btn btn-danger" onclick="deleteEditingTx()" style="margin-right:auto">Delete</button>
+      <button class="btn btn-ghost" onclick="closeModal('txEditModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditTx()" id="etSaveBtn">Save changes</button>
     </div>
   </div>
 </div>
@@ -1095,6 +1256,8 @@ let editingTxId   = null;
 let selTxType     = 'spend';
 let charts        = {};
 let realtimeSub   = null;
+const recentlyInserted = new Set(); // dedup guard for our own inserts vs Realtime
+let balanceAsOfToday = true;  // when true, account balances only count transactions up to today
 
 // ═══════════════════════════════════════════════════════════════
 // BOOT
@@ -1143,7 +1306,10 @@ async function loadProfileAndHousehold() {
   // Step 3: load all data
   await loadAllData();
 
-  // Step 4: launch app
+  // Step 4: auto-log any due recurring transactions
+  await processRecurringDue();
+
+  // Step 5: launch app
   setupRealtime();
   showScreen('screenApp');
   updateNavUI();
@@ -1204,7 +1370,10 @@ function setupRealtime() {
 
 async function handleRealtimeTx(payload) {
   if (payload.eventType === 'INSERT') {
-    if (!transactions.find(t => t.id === payload.new.id)) {
+    const id = payload.new?.id;
+    // Skip if we just inserted this ourselves — prevents double-render
+    if (id && recentlyInserted.has(id)) return;
+    if (!transactions.find(t => t.id === id)) {
       transactions.unshift(payload.new);
       if (payload.new.user_id !== currentUser.id) toast('New transaction from ' + nameFor(payload.new.user_id), 'info');
     }
@@ -1214,6 +1383,8 @@ async function handleRealtimeTx(payload) {
   } else if (payload.eventType === 'DELETE') {
     transactions = transactions.filter(t => t.id !== payload.old.id);
   }
+  // Safety dedup before render — catches any slip-through
+  transactions = [...new Map(transactions.map(t=>[t.id,t])).values()];
   renderAll();
   flashNewTx(payload.new?.id);
 }
@@ -1408,12 +1579,13 @@ function renderAll() {
 // DASHBOARD PREFERENCES
 // ═══════════════════════════════════════════════════════════════
 const DASH_CARDS_DEF = [
-  { id:'income',    label:'Income',          on:true  },
-  { id:'spending',  label:'Spending',        on:true  },
-  { id:'invested',  label:'Invested/Saved',  on:true  },
-  { id:'net_bal',   label:'Net Balance',     on:true  },
-  { id:'net_worth', label:'Net Worth',       on:true  },
-  { id:'debt',      label:'Total Debt',      on:false },
+  { id:'income',       label:'Income',           on:true  },
+  { id:'spending',     label:'Spending',          on:true  },
+  { id:'invested',     label:'Invested/Saved',    on:true  },
+  { id:'debt_payment', label:'Debt Payments',     on:false },
+  { id:'net_bal',      label:'Net Balance',       on:true  },
+  { id:'net_worth',    label:'Net Worth',         on:true  },
+  { id:'debt',         label:'Total Debt',        on:false },
 ];
 const DASH_SECTIONS_DEF = [
   { id:'breakdown', label:'Spending Breakdown', on:true  },
@@ -1474,21 +1646,23 @@ const INVEST_TYPES      = ['savings','investment'];
 
 function renderStats() {
   const now = new Date(), m = now.getMonth(), y = now.getFullYear();
+  const todayStr = now.toISOString().split('T')[0];
   const monthly = transactions.filter(t => {
     const d = new Date(t.date+'T00:00:00');
     return d.getMonth()===m && d.getFullYear()===y;
   });
 
   const income  = monthly.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount),0);
-  const spend   = monthly.filter(t=>t.type==='spend').reduce((a,t)=>a+Number(t.amount),0);
+  // debt_payment counts as spend in all reporting
+  const spend   = monthly.filter(t=>t.type==='spend'||t.type==='debt_payment').reduce((a,t)=>a+Number(t.amount),0);
   const invest  = monthly.filter(t=>t.type==='investment').reduce((a,t)=>a+Number(t.amount),0);
+  const debtPay = monthly.filter(t=>t.type==='debt_payment').reduce((a,t)=>a+Number(t.amount),0);
 
-  // Net Balance = all liquid account balances (checking, credit, cash, custom)
-  const netBal  = accounts.filter(a=>!a.is_archived && LIQUID_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
-  // Net Worth = all accounts except loans
-  const netWorth= accounts.filter(a=>!a.is_archived && WEALTH_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
-  // Total Debt = loan accounts (shown as positive = amount owed)
-  const debt    = accounts.filter(a=>!a.is_archived && LOAN_TYPES.includes(a.type)).reduce((s,a)=>s+Math.abs(calcBalance(a.id)),0);
+  // Account balances — respects balanceAsOfToday flag via calcBalance
+  const netBal   = accounts.filter(a=>!a.is_archived && LIQUID_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
+  const netWorth = accounts.filter(a=>!a.is_archived && WEALTH_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
+  // Total debt = sum of loan account balances (positive = amount owed)
+  const debt     = accounts.filter(a=>!a.is_archived && LOAN_TYPES.includes(a.type)).reduce((s,a)=>s+calcBalance(a.id),0);
 
   const prefs   = getDashPrefs();
   const cardOn  = id => prefs.cards.find(c=>c.id===id)?.on;
@@ -1498,12 +1672,13 @@ function renderStats() {
   const grid = document.getElementById('statsGrid');
   if (grid) {
     const cards = [];
-    if (cardOn('income'))   cards.push({ label:'Income',         val:'+'+currency+fmt(income),   cls:'g', sub: monthly.filter(t=>t.type==='income').length+' txns' });
-    if (cardOn('spending')) cards.push({ label:'Spending',       val:currency+fmt(spend),         cls:'r', sub: monthly.filter(t=>t.type==='spend').length+' txns' });
-    if (cardOn('invested')) cards.push({ label:'Invested / Saved',val:currency+fmt(invest),       cls:'b', sub: monthly.filter(t=>t.type==='investment').length+' txns' });
-    if (cardOn('net_bal'))  cards.push({ label:'Net Balance',    val:(netBal>=0?'+':'')+currency+fmt(netBal), cls:netBal>=0?'g':'r', sub:'liquid accounts' });
-    if (cardOn('net_worth'))cards.push({ label:'Net Worth',      val:(netWorth>=0?'+':'')+currency+fmt(netWorth), cls:netWorth>=0?'g':'r', sub:'excl. loans' });
-    if (cardOn('debt'))     cards.push({ label:'Total Debt',     val:currency+fmt(debt),          cls:'r', sub:'loan accounts' });
+    if (cardOn('income'))       cards.push({ label:'Income',          val:'+'+currency+fmt(income),  cls:'g', sub:monthly.filter(t=>t.type==='income').length+' txns' });
+    if (cardOn('spending'))     cards.push({ label:'Spending',        val:currency+fmt(spend),        cls:'r', sub:monthly.filter(t=>t.type==='spend').length+' txns' });
+    if (cardOn('invested'))     cards.push({ label:'Invested / Saved',val:currency+fmt(invest),       cls:'b', sub:monthly.filter(t=>t.type==='investment').length+' txns' });
+    if (cardOn('debt_payment')) cards.push({ label:'Debt Payments',   val:currency+fmt(debtPay),      cls:'r', sub:'this month' });
+    if (cardOn('net_bal'))      cards.push({ label:'Net Balance',     val:(netBal>=0?'+':'')+currency+fmt(netBal),   cls:netBal>=0?'g':'r',   sub:'liquid accounts'+(balanceAsOfToday?' · today':'') });
+    if (cardOn('net_worth'))    cards.push({ label:'Net Worth',       val:(netWorth>=0?'+':'')+currency+fmt(netWorth), cls:netWorth>=0?'g':'r', sub:'excl. loans'+(balanceAsOfToday?' · today':'') });
+    if (cardOn('debt'))         cards.push({ label:'Total Debt',      val:currency+fmt(debt),          cls:'r', sub:'loan accounts' });
     grid.style.gridTemplateColumns = `repeat(${Math.min(cards.length,4)},1fr)`;
     grid.innerHTML = cards.map(c =>
       `<div class="stat-card"><div class="stat-label">${c.label}</div><div class="stat-value ${c.cls}">${c.val}</div><div class="stat-delta">${c.sub}</div></div>`
@@ -1514,6 +1689,15 @@ function renderStats() {
   const secs = document.getElementById('dashSections');
   if (!secs) return;
   let html = '';
+
+  // Balance date toggle bar
+  html += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:12px;color:var(--text2)">
+    <span>Account balances:</span>
+    <div class="view-tabs" style="font-size:11px">
+      <button class="view-tab ${balanceAsOfToday?'active':''}" onclick="setBalanceDate(true)">As of today</button>
+      <button class="view-tab ${!balanceAsOfToday?'active':''}" onclick="setBalanceDate(false)">All transactions</button>
+    </div>
+  </div>`;
 
   if (secOn('breakdown') || secOn('cashflow')) {
     html += '<div class="grid-2" style="margin-bottom:16px">';
@@ -1541,10 +1725,15 @@ function renderStats() {
 
   secs.innerHTML = html;
 
-  // Render sub-components
   if (secOn('breakdown')) renderDashCatView();
   if (secOn('cashflow'))  renderFlowChart();
   if (secOn('recent'))    renderRecent();
+}
+
+function setBalanceDate(asOfToday) {
+  balanceAsOfToday = asOfToday;
+  renderStats();
+  renderAccounts();
 }
 
 function renderRecent() {
@@ -1610,16 +1799,24 @@ function renderTxPage() {
       const aids = [t.account_id, t.to_account_id].filter(Boolean);
       aids.forEach(aid => {
         if (accFilter && aid !== accFilter) return;
-        if (!runBal[aid]) runBal[aid] = parseFloat(accounts.find(a=>a.id===aid)?.opening_balance)||0;
-        if (t.type==='income'     && t.account_id===aid) runBal[aid] += parseFloat(t.amount)||0;
-        if ((t.type==='spend'||t.type==='investment') && t.account_id===aid) runBal[aid] -= parseFloat(t.amount)||0;
-        if (t.type==='transfer'||t.type==='withdrawal') {
-          if (t.account_id===aid)    runBal[aid] -= parseFloat(t.amount)||0;
-          if (t.to_account_id===aid) runBal[aid] += parseFloat(t.amount)||0;
+        const acc = accounts.find(a=>a.id===aid);
+        const isLoan = acc?.type === 'loan';
+        if (!runBal[aid]) runBal[aid] = parseFloat(acc?.opening_balance)||0;
+        const amt = parseFloat(t.amount)||0;
+        if (t.type==='income'      && t.account_id===aid) runBal[aid] += amt;
+        if (t.type==='spend'       && t.account_id===aid) runBal[aid] -= amt;
+        if (t.type==='investment'  && t.account_id===aid) runBal[aid] -= amt;
+        if (t.type==='adjustment'  && t.account_id===aid) runBal[aid] += amt;
+        if (t.type==='debt_payment') {
+          if (t.account_id===aid)    runBal[aid] -= amt; // money leaves source
+          if (t.to_account_id===aid) runBal[aid] -= amt; // loan balance decreases
         }
-        if (t.type==='adjustment'  && t.account_id===aid) runBal[aid] += parseFloat(t.amount)||0;
+        if (t.type==='transfer'||t.type==='withdrawal') {
+          if (t.account_id===aid)    runBal[aid] -= amt;
+          if (t.to_account_id===aid) runBal[aid] += amt;
+        }
       });
-      runBal[t.id] = { ...(runBal) }; // snapshot after this tx
+      runBal[t.id] = { ...(runBal) };
     });
   }
 
@@ -1645,6 +1842,7 @@ function renderTxPage() {
   }
 
   if(body) body.innerHTML = txs.map(t => txRow(t, cols, runBal)).join('');
+  renderTxCards(txs);
 }
 
 function txRow(t, cols, runBal) {
@@ -1693,7 +1891,11 @@ function txRow(t, cols, runBal) {
     ${cols.includes('nature')       ? `<td style="font-size:11px;color:var(--text3)">${esc(nature)}</td>` : ''}
     ${cols.includes('spending_type')? `<td style="font-size:11px;color:var(--text3)">${esc(spendType)}</td>` : ''}
     ${cols.includes('type')         ? `<td><span class="badge badge-${t.type}">${esc(typeLabel)}</span></td>` : ''}
-    ${cols.includes('recurring')    ? `<td style="text-align:center;font-size:12px">${t.is_recurring?'↻':'—'}</td>` : ''}
+    ${cols.includes('recurring')    ? `<td style="text-align:center;font-size:12px">${
+        t.is_recurring ? '<span title="Recurring template" style="color:var(--amber)">⚙ template</span>'
+      : t.recur_freq   ? `<span title="Auto-logged from recurring" class="badge badge-recurring">↻ ${t.recur_freq}</span>`
+      : '—'
+    }</td>` : ''}
     ${cols.includes('recur_freq')   ? `<td style="font-size:11px;color:var(--text3)">${t.recur_freq||'—'}</td>` : ''}
     ${cols.includes('account')      ? `<td style="font-size:12px;color:var(--text2)">${esc(accName)}</td>` : ''}
     ${cols.includes('person')       ? `<td style="font-size:12px;font-weight:500;color:${whoColor}">${esc(who)}</td>` : ''}
@@ -1716,15 +1918,21 @@ function renderAccounts() {
   if (!accounts.length) { grid.innerHTML='<div class="empty" style="grid-column:1/-1">No accounts yet — add one</div>'; return; }
 
   grid.innerHTML = getSortedAccounts().map(a => {
-    const bal = calcBalance(a.id);
+    const bal = calcBalance(a.id);  // respects balanceAsOfToday via calcBalance
+    const isLoan = a.type === 'loan';
     const txCount = transactions.filter(t => t.account_id===a.id || t.to_account_id===a.id).length;
     const typeLabel = a.type==='custom' ? (a.custom_type||'custom') : a.type;
     const barColor = a.color || 'var(--green)';
+    // Loan: positive bal = debt remaining (show in red), 0 = paid off (green)
+    const balCls = isLoan ? (bal<=0?'pos':'neg') : (bal>=0?'pos':'neg');
+    const balDisplay = isLoan
+      ? (bal<=0 ? 'Paid off' : currency+fmt(bal)+' owed')
+      : (bal>=0?'':'-')+currency+fmt(Math.abs(bal));
     return `<div class="acc-card">
       <div class="acc-color-bar" style="background:${barColor}"></div>
       <div class="acc-name">${esc(a.name)} <span style="color:var(--text3);font-weight:400">${typeLabel}</span></div>
-      <div class="acc-bal ${bal>=0?'pos':'neg'}">${bal>=0?'':'-'}${currency}${fmt(Math.abs(bal))}</div>
-      <div class="acc-sub">${txCount} transaction${txCount!==1?'s':''} · opening: ${currency}${fmt(a.opening_balance||0)}</div>
+      <div class="acc-bal ${balCls}">${balDisplay}</div>
+      <div class="acc-sub">${txCount} transaction${txCount!==1?'s':''} · opening: ${isLoan?currency+fmt(a.opening_balance||0)+' debt':currency+fmt(a.opening_balance||0)}</div>
       <div class="acc-card-actions">
         <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="openAddAccount('${a.id}')">edit</button>
         <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="openAdjustModal('${a.id}')">adjust balance</button>
@@ -1874,33 +2082,7 @@ function openAddTx(prefill) {
   openModal('txModal');
 }
 
-function editTx(id) {
-  const t = transactions.find(x=>x.id===id);
-  if (!t) return;
-  editingTxId = id;
-  set('txModalTitle','Edit Transaction');
-  document.getElementById('txAmt').value   = t.amount;
-  document.getElementById('txDesc').value  = t.description;
-  document.getElementById('txNotes').value = t.notes||'';
-  document.getElementById('txDate').value  = t.date;
-  document.getElementById('txRecur').checked = !!t.is_recurring;
-  document.getElementById('txRecurFreq').value = t.recur_freq||'monthly';
-  document.getElementById('txRecurUntil').value = t.recur_until||'';
-  toggleRecur();
-  selType(t.type);
-  populateTxDropdowns();
-  if (t.category_id) document.getElementById('txCat').value = t.category_id;
-  if (t.type === 'transfer') {
-    if (t.account_id)    document.getElementById('txFrom').value = t.account_id;
-    if (t.to_account_id) document.getElementById('txTo').value   = t.to_account_id;
-  } else {
-    if (t.account_id) document.getElementById('txAcc').value = t.account_id;
-  }
-  // Hide template button when editing an existing tx
-  const tBtn = document.getElementById('txTemplateBtn');
-  if (tBtn) tBtn.style.display = 'none';
-  openModal('txModal');
-}
+function editTx(id) { openEditModal(id); }
 
 function populateTxDropdowns() {
   const catSel = document.getElementById('txCat');
@@ -1922,13 +2104,19 @@ function populateTxDropdowns() {
     // Auto-apply default tx type when category changes
     catSel.onchange = () => applyDefaultTxType(catSel.value);
   }
-  const accOpts = getSortedAccounts().map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
-  const accSel  = document.getElementById('txAcc');
-  const fromSel = document.getElementById('txFrom');
-  const toSel   = document.getElementById('txTo');
-  if (accSel)  accSel.innerHTML  = accOpts;
-  if (fromSel) fromSel.innerHTML = accOpts;
-  if (toSel)   toSel.innerHTML   = accOpts;
+  const accOpts     = getSortedAccounts().map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  const loanOpts    = accounts.filter(a=>a.type==='loan'&&!a.is_archived).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  const nonLoanOpts = getSortedAccounts().filter(a=>a.type!=='loan').map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  const accSel     = document.getElementById('txAcc');
+  const fromSel    = document.getElementById('txFrom');
+  const toSel      = document.getElementById('txTo');
+  const debtFrom   = document.getElementById('txDebtFrom');
+  const debtAcc    = document.getElementById('txDebtAcc');
+  if (accSel)   accSel.innerHTML   = accOpts;
+  if (fromSel)  fromSel.innerHTML  = accOpts;
+  if (toSel)    toSel.innerHTML    = accOpts;
+  if (debtFrom) debtFrom.innerHTML = nonLoanOpts || '<option value="">No non-loan accounts</option>';
+  if (debtAcc)  debtAcc.innerHTML  = loanOpts    || '<option value="">No loan accounts</option>';
 }
 
 function selType(type) {
@@ -1937,24 +2125,31 @@ function selType(type) {
     el.className = 'to';
     if (el.dataset.t === type) el.className = `to to-${type}`;
   });
-  const isMovement = type === 'transfer' || type === 'withdrawal';
+  const isMovement    = type === 'transfer' || type === 'withdrawal';
+  const isDebtPayment = type === 'debt_payment';
   const txAccRow      = document.getElementById('txAccRow');
   const txTransferRow = document.getElementById('txTransferRow');
-  if (txAccRow)      txAccRow.style.display     = isMovement ? 'none' : '';
-  if (txTransferRow) txTransferRow.style.display = isMovement ? 'block' : 'none';
-  // Update from/to labels for withdrawal
-  const fromLbl = document.querySelector('#txTransferRow .fg:first-child .fl');
-  const toLbl   = document.querySelector('#txTransferRow .fg:last-child .fl');
+  const txDebtRow     = document.getElementById('txDebtRow');
+  if (txAccRow)      txAccRow.style.display      = (isMovement||isDebtPayment) ? 'none' : '';
+  if (txTransferRow) txTransferRow.style.display  = isMovement    ? 'block' : 'none';
+  if (txDebtRow)     txDebtRow.style.display      = isDebtPayment ? 'block' : 'none';
+  // Update from/to labels
+  const fromLbl = document.getElementById('txFromLbl');
+  const toLbl   = document.getElementById('txToLbl');
   if (fromLbl) fromLbl.textContent = type==='withdrawal' ? 'From (savings/investment)' : 'From account';
   if (toLbl)   toLbl.textContent   = type==='withdrawal' ? 'To (checking/cash)'        : 'To account';
+  // Category + recurring visibility
   const catRow   = document.getElementById('txCat')?.closest('.fg2');
   const recurRow = document.querySelector('.recur-row');
   if (catRow)   catRow.style.display   = isMovement ? 'none' : '';
   if (recurRow) recurRow.style.display = isMovement ? 'none' : '';
+  // Description hint
   const descEl = document.getElementById('txDesc');
-  if (descEl && isMovement && !descEl.value)
-    descEl.placeholder = type==='withdrawal' ? 'e.g. Withdraw from savings' : 'e.g. Move to savings';
-  else if (descEl && !isMovement) descEl.placeholder = 'What was this?';
+  if (descEl) {
+    if (isMovement)    descEl.placeholder = type==='withdrawal' ? 'e.g. Withdraw from savings' : 'e.g. Move to savings';
+    else if (isDebtPayment) descEl.placeholder = 'e.g. Mortgage payment';
+    else               descEl.placeholder = 'What was this?';
+  }
 }
 
 function toggleRecur() {
@@ -1968,16 +2163,27 @@ async function saveTx() {
   const desc   = document.getElementById('txDesc').value.trim();
   if (!amount || amount <= 0 || !desc) { toast('Amount and description required', 'err'); return; }
 
-  const isTransfer = selTxType === 'transfer';
-  const accId      = isTransfer ? document.getElementById('txFrom').value : document.getElementById('txAcc').value;
-  const toAccId    = isTransfer ? document.getElementById('txTo').value   : null;
+  const isTransfer    = selTxType === 'transfer' || selTxType === 'withdrawal';
+  const isDebtPayment = selTxType === 'debt_payment';
 
-  // Remember last used account for next time
-  if (accId && !isTransfer) localStorage.setItem('pocket_last_acc', accId);
+  let accId, toAccId;
+  if (isTransfer) {
+    accId   = document.getElementById('txFrom').value;
+    toAccId = document.getElementById('txTo').value;
+    if (accId === toAccId) { toast('From and To accounts must be different', 'err'); return; }
+  } else if (isDebtPayment) {
+    accId   = document.getElementById('txDebtFrom').value;
+    toAccId = document.getElementById('txDebtAcc').value;
+    if (!accId)   { toast('Select an account to pay from', 'err'); return; }
+    if (!toAccId) { toast('Select a debt account', 'err'); return; }
+  } else {
+    accId   = document.getElementById('txAcc').value;
+    toAccId = null;
+  }
 
-  if (isTransfer && accId === toAccId) { toast('From and To accounts must be different', 'err'); return; }
+  if (!isTransfer && !isDebtPayment) localStorage.setItem('pocket_last_acc', accId);
 
-  const isRecur   = document.getElementById('txRecur').checked;
+  const isRecur = document.getElementById('txRecur').checked;
   const tx = {
     household_id:  household.id,
     user_id:       currentUser.id,
@@ -1985,13 +2191,13 @@ async function saveTx() {
     description:   desc,
     amount:        Math.abs(amount),
     type:          selTxType,
-    category_id:   document.getElementById('txCat').value || null,
-    account_id:    accId || null,
-    to_account_id: toAccId,
+    category_id:   document.getElementById('txCat')?.value || null,
+    account_id:    accId   || null,
+    to_account_id: toAccId || null,
     notes:         document.getElementById('txNotes').value.trim() || null,
     is_recurring:  isRecur,
     recur_freq:    isRecur ? document.getElementById('txRecurFreq').value : null,
-    recur_until:   isRecur && document.getElementById('txRecurUntil').value ? document.getElementById('txRecurUntil').value : null,
+    recur_until:   null,
   };
 
   setLoading('txSaveBtn', true);
@@ -2005,7 +2211,12 @@ async function saveTx() {
   } else {
     const { data, error: err } = await sb.from('transactions').insert(tx).select().single();
     error = err;
-    if (!error && data) transactions.unshift(data);
+    if (!error && data) {
+      // Mark as recently inserted so Realtime event doesn't double-add it
+      recentlyInserted.add(data.id);
+      setTimeout(() => recentlyInserted.delete(data.id), 5000);
+      transactions.unshift(data);
+    }
   }
   setLoading('txSaveBtn', false);
   if (error) { toast('Error: ' + error.message, 'err'); return; }
@@ -2062,6 +2273,9 @@ function renderAccSettings() {
     ${sorted.map(a => {
       const typeLabel = a.type==='custom'?(a.custom_type||'custom'):a.type;
       const bal = calcBalance(a.id);
+      const isLoan = a.type==='loan';
+      const balColor = isLoan?(bal<=0?'var(--green)':'var(--red)'):(bal>=0?'var(--green)':'var(--red)');
+      const balDisplay = isLoan?(bal<=0?'Paid off':currency+fmt(bal)+' owed'):(bal>=0?'':'-')+currency+fmt(Math.abs(bal));
       return `<tr class="acc-settings-row" data-id="${a.id}" draggable="true"
           ondragstart="accDragStart(event,'${a.id}')"
           ondragover="accDragOver(event,this)"
@@ -2072,7 +2286,7 @@ function renderAccSettings() {
         <td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${a.color||'var(--green)'}"></span><strong>${esc(a.name)}</strong></span></td>
         <td style="color:var(--text2);font-size:12px">${typeLabel}</td>
         <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px">${currency}${fmt(a.opening_balance||0)}</td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:${bal>=0?'var(--green)':'var(--red)'}">${bal>=0?'':'-'}${currency}${fmt(Math.abs(bal))}</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:${balColor}">${balDisplay}</td>
         <td style="white-space:nowrap;text-align:right">
           <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="openAddAccount('${a.id}')">edit</button>
           <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteAccount('${a.id}')">del</button>
@@ -2148,10 +2362,8 @@ function goTo(page) {
   const navEl = document.querySelector(`[onclick="goTo('${page}')"]`);
   if (navEl) navEl.classList.add('active');
   if (window.innerWidth <= 768) closeMobileMenu();
-  // Page-specific renders
+  renderAll();
   if (page==='forecast')  renderForecast();
-  if (page==='recurring') renderRecurPage();
-  else renderAll();
 }
 
 function showScreen(id) {
@@ -2253,7 +2465,7 @@ function exportCSV() {
       signedAmt(t), parseFloat(t.amount)||0, currency,
       csvQ(acc), csvQ(toAcc), '',
       csvQ(person), csvQ(t.notes||''),
-      t.recur_until||'', t.id, t.created_at||''
+      t.id, t.created_at||''
     ].join(',');
   });
 
@@ -2366,8 +2578,8 @@ function renderTypeChart() {
   dc('typeChart');
   const ctx=document.getElementById('typeChart'); if(!ctx) return;
   const d={spend:0,income:0,investment:0};
-  transactions.filter(t=>t.type!=='transfer').forEach(t=>{d[t.type]=(d[t.type]||0)+Number(t.amount);});
-  charts['typeChart']=new Chart(ctx,{type:'pie',data:{labels:['Spend','Income','Investment'],datasets:[{data:[d.spend,d.income,d.investment],backgroundColor:['#C8553D','#2D5A3D','#3D5A8A'],borderWidth:0}]},options:PO});
+  transactions.filter(t=>t.type!=='transfer'&&t.type!=='withdrawal'&&t.type!=='adjustment').forEach(t=>{d[t.type]=(d[t.type]||0)+Number(t.amount);});
+  charts['typeChart']=new Chart(ctx,{type:'pie',data:{labels:['Spend','Income','Invest/Save'],datasets:[{data:[d.spend,d.income,d.investment],backgroundColor:['#C8553D','#2D5A3D','#3D5A8A'],borderWidth:0}]},options:PO});
 }
 
 function renderMonthlyChart() {
@@ -2822,9 +3034,13 @@ function selectAccColor(color, el) {
 }
 
 function toggleCustomType() {
-  const sel = document.getElementById('accType');
-  const row = document.getElementById('accCustomTypeRow');
+  const sel  = document.getElementById('accType');
+  const row  = document.getElementById('accCustomTypeRow');
+  const hint = document.getElementById('openingBalHint');
   if (row) row.style.display = sel.value==='custom' ? 'block' : 'none';
+  if (hint) hint.textContent = sel.value==='loan'
+    ? 'Enter the current amount owed as a positive number (e.g. 250000 for a 250k mortgage). Payments will reduce this.'
+    : 'The starting balance of this account. Transactions are calculated on top.';
 }
 
 function openAddAccount(accId) {
@@ -2909,16 +3125,36 @@ function openAdjustModal(accId) {
 }
 
 function calcBalance(accId, upToDate) {
-  const acc = accounts.find(a=>a.id===accId);
+  const acc     = accounts.find(a=>a.id===accId);
+  const isLoan  = acc?.type === 'loan';
   let bal = parseFloat(acc?.opening_balance) || 0;
-  const txs = upToDate ? transactions.filter(t => t.date <= upToDate) : transactions;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const cutoff   = upToDate || (balanceAsOfToday ? todayStr : null);
+  const txs      = cutoff ? transactions.filter(t => t.date <= cutoff) : transactions;
   txs.forEach(t => {
-    if (t.type==='adjustment' && t.account_id===accId) { bal += parseFloat(t.amount)||0; return; }
-    if (t.type==='income'  && t.account_id===accId) bal += parseFloat(t.amount)||0;
-    if ((t.type==='spend'||t.type==='investment') && t.account_id===accId) bal -= parseFloat(t.amount)||0;
-    if ((t.type==='transfer'||t.type==='withdrawal')) {
-      if (t.account_id===accId)    bal -= parseFloat(t.amount)||0;
-      if (t.to_account_id===accId) bal += parseFloat(t.amount)||0;
+    const amt = parseFloat(t.amount) || 0;
+    if (t.type === 'adjustment' && t.account_id === accId) { bal += amt; return; }
+    if (isLoan) {
+      // Loan: opening balance = total debt. Payments reduce it, new debt increases it.
+      if (t.type === 'debt_payment') {
+        if (t.to_account_id === accId) bal -= amt;  // payment → debt decreases
+      }
+      if (t.type === 'transfer' || t.type === 'withdrawal') {
+        if (t.to_account_id === accId) bal -= amt;
+        if (t.account_id    === accId) bal += amt;
+      }
+      if (t.type === 'spend'  && t.account_id === accId) bal += amt; // charge to loan → more debt
+      if (t.type === 'income' && t.account_id === accId) bal -= amt; // credit → less debt
+    } else {
+      // Normal account
+      if (t.type === 'income'      && t.account_id === accId) bal += amt;
+      if (t.type === 'spend'       && t.account_id === accId) bal -= amt;
+      if (t.type === 'investment'  && t.account_id === accId) bal -= amt;
+      if (t.type === 'debt_payment'&& t.account_id === accId) bal -= amt; // money leaves source
+      if (t.type === 'transfer' || t.type === 'withdrawal') {
+        if (t.account_id    === accId) bal -= amt;
+        if (t.to_account_id === accId) bal += amt;
+      }
     }
   });
   return bal;
@@ -3085,7 +3321,7 @@ function monthlySpend() {
   const now = new Date(), m = now.getMonth(), y = now.getFullYear();
   return transactions.filter(t => {
     const d = new Date(t.date+'T00:00:00');
-    return t.type==='spend' && d.getMonth()===m && d.getFullYear()===y;
+    return (t.type==='spend'||t.type==='debt_payment') && d.getMonth()===m && d.getFullYear()===y;
   });
 }
 
@@ -3973,6 +4209,227 @@ document.addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════════════════════════════════
+// AUTO-LOG RECURRING TRANSACTIONS
+// ═══════════════════════════════════════════════════════════════
+async function processRecurringDue() {
+  const templates = transactions.filter(t => t.is_recurring);
+  if (!templates.length) return;
+  const today    = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().split('T')[0];
+  const toInsert = [];
+
+  for (const tmpl of templates) {
+    // Find most recent auto-logged instance
+    const instances = transactions.filter(t =>
+      t.id !== tmpl.id && t.description === tmpl.description &&
+      t.account_id === tmpl.account_id && t.type === tmpl.type && !t.is_recurring
+    ).sort((a,b) => b.date.localeCompare(a.date));
+    const lastDate = instances[0]?.date || tmpl.date;
+    const nextDue  = nextDueDate(tmpl.recur_freq, lastDate);
+    if (!nextDue || nextDue > todayStr) continue;
+    // Dedup check
+    const exists = transactions.some(t =>
+      t.id !== tmpl.id && t.description === tmpl.description &&
+      t.account_id === tmpl.account_id && t.type === tmpl.type && t.date === nextDue
+    );
+    if (exists) continue;
+    toInsert.push({
+      household_id: household.id, user_id: tmpl.user_id,
+      date: nextDue, description: tmpl.description, amount: tmpl.amount,
+      type: tmpl.type, category_id: tmpl.category_id,
+      account_id: tmpl.account_id, to_account_id: tmpl.to_account_id,
+      notes: tmpl.notes, is_recurring: false,
+      recur_freq: tmpl.recur_freq,  // marks this as auto-logged from a recurring template
+    });
+  }
+  if (!toInsert.length) return;
+  const { data, error } = await sb.from('transactions').insert(toInsert).select();
+  if (error) { console.warn('Auto-log recurring error:', error); return; }
+  if (data) {
+    data.forEach(t => transactions.unshift(t));
+    toast(`↻ ${data.length} recurring transaction${data.length>1?'s':''} auto-logged`, 'ok');
+  }
+}
+
+function nextDueDate(freq, fromDateStr) {
+  if (!freq || !fromDateStr) return null;
+  const d = new Date(fromDateStr + 'T00:00:00');
+  switch (freq) {
+    case 'daily':       d.setDate(d.getDate() + 1); break;
+    case 'weekly':      d.setDate(d.getDate() + 7); break;
+    case 'fortnightly': d.setDate(d.getDate() + 14); break;
+    case 'monthly':     d.setMonth(d.getMonth() + 1); break;
+    case 'yearly':      d.setFullYear(d.getFullYear() + 1); break;
+    default: return null;
+  }
+  return d.toISOString().split('T')[0];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MOBILE TRANSACTION CARD LIST
+// ═══════════════════════════════════════════════════════════════
+function renderTxCards(txs) {
+  const el = document.getElementById('txCardList'); if (!el) return;
+  if (!txs.length) { el.innerHTML='<div class="empty" style="padding:24px">No transactions match</div>'; return; }
+  el.innerHTML = txs.map(t => {
+    const cat           = categories.find(c=>c.id===t.category_id);
+    const acc           = accounts.find(a=>a.id===t.account_id);
+    const isMove        = t.type==='transfer'||t.type==='withdrawal';
+    const isDebtPayment = t.type==='debt_payment';
+    const toAcc         = (isMove||isDebtPayment) ? accounts.find(a=>a.id===t.to_account_id)?.name : null;
+    const cls    = t.type==='income'?'amt-pos':isMove?'amt-neu':'amt-neg';
+    const sgn    = t.type==='income'?'+':isMove?'±':'-';
+    const typeLabel = t.type==='investment'?'invest/save':t.type==='debt_payment'?'debt payment':t.type;
+    return `<div class="tx-card" data-txid="${t.id}">
+      <div class="tx-card-top">
+        <div class="tx-card-desc">${esc(t.description)}</div>
+        <div class="tx-card-amt"><span class="${cls}">${sgn}${currency}${fmt(t.amount)}</span></div>
+      </div>
+      <div class="tx-card-meta">
+        <span>${fmtDate(t.date)}</span>
+        ${cat?`<span>${cat.icon} ${esc(cat.name)}</span>`:''}
+        <span class="badge badge-${t.type}" style="font-size:9px">${esc(typeLabel)}</span>
+        <span>${esc(acc?.name||'—')}${toAcc?' → '+esc(toAcc):''}</span>
+        ${t.is_recurring ? '<span title="Template">⚙</span>' : t.recur_freq ? `<span class="badge badge-recurring" style="font-size:9px">↻ ${t.recur_freq}</span>` : ''}
+      </div>
+      <div class="tx-card-actions">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center;font-size:12px" onclick="openEditModal('${t.id}')">✎ Edit</button>
+        <button class="btn btn-danger" style="flex:1;justify-content:center;font-size:12px" onclick="deleteTx('${t.id}')">✕ Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FULL EDIT MODAL
+// ═══════════════════════════════════════════════════════════════
+let editingFullTxId = null;
+let selEditTxType   = 'spend';
+
+function openEditModal(id) {
+  const t = transactions.find(x=>x.id===id); if (!t) return;
+  editingFullTxId = id;
+  selEditTxType   = t.type;
+  document.querySelectorAll('#txEditModal .to').forEach(el => {
+    el.className = 'to';
+    if (el.dataset.et === t.type) el.className = `to to-${t.type}`;
+  });
+  const accOpts = getSortedAccounts().map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  ['etAcc','etFrom','etTo'].forEach(eid => { const el=document.getElementById(eid); if(el) el.innerHTML=accOpts; });
+  const roots = categories.filter(c=>!c.parent_id);
+  let catOpts = '<option value="">— No category —</option>';
+  roots.forEach(r => {
+    const subs = categories.filter(c=>c.parent_id===r.id);
+    if (subs.length) {
+      catOpts += `<optgroup label="${esc(r.icon||'')} ${esc(r.name)}">`;
+      subs.forEach(s => { catOpts += `<option value="${s.id}">${esc(s.icon||'')} ${esc(s.name)}</option>`; });
+      catOpts += '</optgroup>';
+    } else catOpts += `<option value="${r.id}">${esc(r.icon||'')} ${esc(r.name)}</option>`;
+  });
+  document.getElementById('etCat').innerHTML = catOpts;
+  document.getElementById('etAmt').value       = t.amount;
+  document.getElementById('etDate').value      = t.date;
+  document.getElementById('etDesc').value      = t.description;
+  document.getElementById('etNotes').value     = t.notes||'';
+  document.getElementById('etRecur').checked   = !!t.is_recurring;
+  document.getElementById('etRecurFreq').value = t.recur_freq||'monthly';
+  document.getElementById('etNature').value    = '';
+  document.getElementById('etSpendType').value = '';
+  toggleEditRecur();
+  if (t.category_id) document.getElementById('etCat').value = t.category_id;
+  const isMove        = t.type==='transfer'||t.type==='withdrawal';
+  const isDebtPayment = t.type==='debt_payment';
+  const loanOpts    = accounts.filter(a=>a.type==='loan'&&!a.is_archived).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  const nonLoanOpts = getSortedAccounts().filter(a=>a.type!=='loan').map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  const etDebtFrom  = document.getElementById('etDebtFrom');
+  const etDebtAcc   = document.getElementById('etDebtAcc');
+  if (etDebtFrom) etDebtFrom.innerHTML = nonLoanOpts;
+  if (etDebtAcc)  etDebtAcc.innerHTML  = loanOpts;
+  document.getElementById('etAccRow').style.display      = (isMove||isDebtPayment)?'none':'';
+  document.getElementById('etTransferRow').style.display = isMove?'block':'none';
+  const etDebtRow = document.getElementById('etDebtRow');
+  if (etDebtRow) etDebtRow.style.display = isDebtPayment?'block':'none';
+  if (isMove) {
+    if (t.account_id)    document.getElementById('etFrom').value = t.account_id;
+    if (t.to_account_id) document.getElementById('etTo').value   = t.to_account_id;
+  } else if (isDebtPayment) {
+    if (t.account_id    && etDebtFrom) etDebtFrom.value = t.account_id;
+    if (t.to_account_id && etDebtAcc)  etDebtAcc.value  = t.to_account_id;
+  } else if (t.account_id) document.getElementById('etAcc').value = t.account_id;
+  openModal('txEditModal');
+}
+
+function selEditType(type) {
+  selEditTxType = type;
+  document.querySelectorAll('#txEditModal .to').forEach(el => {
+    el.className='to'; if(el.dataset.et===type) el.className=`to to-${type}`;
+  });
+  const isMove        = type==='transfer'||type==='withdrawal';
+  const isDebtPayment = type==='debt_payment';
+  document.getElementById('etAccRow').style.display      = (isMove||isDebtPayment)?'none':'';
+  document.getElementById('etTransferRow').style.display = isMove?'block':'none';
+  const etDebtRow = document.getElementById('etDebtRow');
+  if (etDebtRow) etDebtRow.style.display = isDebtPayment?'block':'none';
+  const fl = document.getElementById('etFromLbl'), tl = document.getElementById('etToLbl');
+  if (fl) fl.textContent = type==='withdrawal'?'From (savings/investment)':'From account';
+  if (tl) tl.textContent = type==='withdrawal'?'To (checking/cash)':'To account';
+}
+
+function toggleEditRecur() {
+  const on = document.getElementById('etRecur').checked;
+  const rf = document.getElementById('etRecurFields');
+  if (rf) rf.style.display = on?'flex':'none';
+}
+
+async function saveEditTx() {
+  const amount = parseFloat(document.getElementById('etAmt').value);
+  const desc   = document.getElementById('etDesc').value.trim();
+  if (!amount||amount<=0||!desc) { toast('Amount and description required','err'); return; }
+  const isMove        = selEditTxType==='transfer'||selEditTxType==='withdrawal';
+  const isDebtPayment = selEditTxType==='debt_payment';
+  let accId, toAccId;
+  if (isMove) {
+    accId   = document.getElementById('etFrom').value;
+    toAccId = document.getElementById('etTo').value;
+    if (accId===toAccId) { toast('From and To must be different','err'); return; }
+  } else if (isDebtPayment) {
+    accId   = document.getElementById('etDebtFrom').value;
+    toAccId = document.getElementById('etDebtAcc').value;
+  } else {
+    accId   = document.getElementById('etAcc').value;
+    toAccId = null;
+  }
+  const isRecur = document.getElementById('etRecur').checked;
+  const tx = {
+    household_id: household.id, user_id: currentUser.id,
+    date: document.getElementById('etDate').value, description: desc,
+    amount: Math.abs(amount), type: selEditTxType,
+    category_id: document.getElementById('etCat').value||null,
+    account_id: accId||null, to_account_id: toAccId||null,
+    notes: document.getElementById('etNotes').value.trim()||null,
+    is_recurring: isRecur,
+    recur_freq:  isRecur?document.getElementById('etRecurFreq').value:null,
+    recur_until: null,
+  };
+  setLoading('etSaveBtn',true);
+  const {error} = await sb.from('transactions').update(tx).eq('id',editingFullTxId);
+  setLoading('etSaveBtn',false);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  const i = transactions.findIndex(t=>t.id===editingFullTxId);
+  if (i>=0) transactions[i] = {...transactions[i],...tx,id:editingFullTxId};
+  closeModal('txEditModal'); renderAll(); toast('Updated ✓','ok');
+}
+
+async function deleteEditingTx() {
+  if (!editingFullTxId) return;
+  if (!confirm('Delete this transaction?')) return;
+  const {error} = await sb.from('transactions').delete().eq('id',editingFullTxId);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  transactions = transactions.filter(t=>t.id!==editingFullTxId);
+  closeModal('txEditModal'); renderAll(); toast('Deleted','ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
 // RECURRING PAGE
 // ═══════════════════════════════════════════════════════════════
 function renderRecurPage() {
@@ -4010,7 +4467,7 @@ function renderRecurPage() {
       <thead><tr>
         <th>Description</th><th>Category</th><th>Account</th>
         <th style="text-align:right">Amount</th><th>Frequency</th>
-        <th>Until</th><th>This month</th><th></th>
+        <th>This month</th><th></th>
       </tr></thead>
       <tbody>
       ${recurring.map(t => {
@@ -4032,7 +4489,6 @@ function renderRecurPage() {
           <td style="font-size:12px;color:var(--text2)">${acc?.name||'—'}</td>
           <td style="text-align:right"><span class="${cls}">${sgn}${currency}${fmt(t.amount)}</span></td>
           <td style="font-size:12px;color:var(--text2)">${t.recur_freq||'—'}</td>
-          <td style="font-size:11px;color:var(--text3)">${t.recur_until||'ongoing'}</td>
           <td>${status}</td>
           <td style="white-space:nowrap">
             <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="logRecurNow('${t.id}')">log now</button>
