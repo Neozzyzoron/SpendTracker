@@ -2557,42 +2557,42 @@ async function saveCatModal() {
   const editId = document.getElementById('catEditId').value;
   if (!name) { toast('Enter a name', 'err'); return; }
   const payload = {
-    household_id:      household.id,
+    household_id:    household.id,
     name,
-    parent_id:         document.getElementById('catParent').value || null,
-    nature:            document.getElementById('catNature').value,
-    cat_type:          document.getElementById('catType').value,
-    icon:              document.getElementById('catIcon').value,
-    color:             document.getElementById('catColor').value,
-    default_tx_type:   document.getElementById('catDefaultTxType').value || 'spend',
+    parent_id:       document.getElementById('catParent').value || null,
+    nature:          document.getElementById('catNature').value,
+    cat_type:        document.getElementById('catType').value,
+    icon:            document.getElementById('catIcon').value,
+    color:           document.getElementById('catColor').value,
+    default_tx_type: document.getElementById('catDefaultTxType').value || 'spend',
   };
   setLoading('catSaveBtn', true);
   let error;
   if (editId) {
-    ({ error } = await sb.from('categories').update(payload).eq('id', editId).eq('household_id', household.id));
+    const res = await sb.from('categories').update(payload).eq('id', editId);
+    error = res.error;
+    console.log('[saveCat] UPDATE response:', res);
     if (!error) {
-      // Apply payload immediately — local state always reflects what you typed
       const i = categories.findIndex(c=>c.id===editId);
       if (i>=0) categories[i] = {...categories[i], ...payload, id: editId};
-      // Re-fetch in background to detect silent RLS failures
-      sb.from('categories').select('name').eq('id', editId).maybeSingle().then(({ data: check }) => {
-        if (check && check.name !== name) {
-          toast('⚠ DB may not have saved — check RLS policies', 'err');
-        }
-      });
     }
   } else {
-    const { data, error: err } = await sb.from('categories').insert(payload).select().single();
-    error = err;
-    if (!error && data) categories.push(data);
+    const res = await sb.from('categories').insert(payload).select().single();
+    error = res.error;
+    console.log('[saveCat] INSERT response:', res);
+    if (!error && res.data) categories.push(res.data);
   }
   setLoading('catSaveBtn', false);
-  if (error) { toast('Error: '+error.message,'err'); return; }
+  if (error) {
+    console.error('[saveCat] Error:', error);
+    toast('Error saving: ' + error.message, 'err');
+    return;
+  }
   closeModal('catModal');
   renderCatTree();
   populateFilters();
   populateTxDropdowns();
-  toast(editId?'Category updated ✓':'Category added ✓','ok');
+  toast(editId ? 'Category updated ✓' : 'Category added ✓', 'ok');
 }
 
 async function deleteCat(id) {
@@ -2673,28 +2673,28 @@ async function saveAccount() {
   setLoading('accSaveBtn', true);
   let error;
   if (editingAccId) {
-    ({ error } = await sb.from('accounts').update(payload).eq('id', editingAccId).eq('household_id', household.id));
+    const res = await sb.from('accounts').update(payload).eq('id', editingAccId);
+    error = res.error;
+    console.log('[saveAccount] UPDATE response:', res);
     if (!error) {
-      // Apply payload immediately for instant UI feedback
       const i = accounts.findIndex(a=>a.id===editingAccId);
       if (i>=0) accounts[i] = {...accounts[i], ...payload, id: editingAccId};
-      // Background check for silent RLS failures
-      sb.from('accounts').select('name').eq('id', editingAccId).maybeSingle().then(({ data: check }) => {
-        if (check && check.name !== name) {
-          toast('⚠ DB may not have saved — check RLS policies', 'err');
-        }
-      });
     }
   } else {
-    const { data, error: err } = await sb.from('accounts').insert(payload).select().single();
-    error = err;
-    if (!error && data) accounts.push(data);
+    const res = await sb.from('accounts').insert(payload).select().single();
+    error = res.error;
+    console.log('[saveAccount] INSERT response:', res);
+    if (!error && res.data) accounts.push(res.data);
   }
   setLoading('accSaveBtn', false);
-  if (error) { toast('Error: '+error.message,'err'); return; }
+  if (error) {
+    console.error('[saveAccount] Error:', error);
+    toast('Error saving: ' + error.message, 'err');
+    return;
+  }
   closeModal('accModal');
   renderAll();
-  toast(editingAccId?'Account updated ✓':'Account added ✓','ok');
+  toast(editingAccId ? 'Account updated ✓' : 'Account added ✓', 'ok');
 }
 
 function openAdjustModal(accId) {
