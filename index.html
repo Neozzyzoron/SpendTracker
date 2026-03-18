@@ -1963,7 +1963,21 @@ function renderStats() {
         case 'salary_runway': if (salaryRunway!==null) cards.push({ label:'Runway', val:salaryRunway+' days', cls:salaryRunway>14?'g':salaryRunway>7?'b':'r', sub:'at current spend rate' }); break;
       }
     });
-    const cols = Math.min(Math.max(cards.length, 1), 4);
+    // Balance the grid: find the most even distribution
+    // e.g. 9→3, 8→4, 7→4(4+3), 6→3, 5→3(3+2), 4→4, 3→3, 2→2, 1→1
+    const n = cards.length;
+    let cols = 4;
+    if (n <= 1) cols = 1;
+    else if (n === 2) cols = 2;
+    else if (n === 3) cols = 3;
+    else if (n === 4) cols = 4;
+    else if (n === 5) cols = 3; // 3+2
+    else if (n === 6) cols = 3; // 3+3
+    else if (n === 7) cols = 4; // 4+3
+    else if (n === 8) cols = 4; // 4+4
+    else if (n === 9) cols = 3; // 3+3+3
+    else if (n === 10) cols = 5; // 5+5
+    else cols = Math.ceil(Math.sqrt(n)); // fallback for exotic counts
     grid.style.gridTemplateColumns = `repeat(${cols},1fr)`;
     grid.innerHTML = cards.map(c =>
       `<div class="stat-card"><div class="stat-label">${c.label}</div><div class="stat-value ${c.cls}">${c.val}</div><div class="stat-delta">${c.sub}</div></div>`
