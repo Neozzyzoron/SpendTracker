@@ -364,6 +364,8 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 .cat-child-actions{display:flex;gap:5px;opacity:0;transition:opacity .15s;}
 .cat-child:hover .cat-child-actions{opacity:1;}
 .cat-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:inline-block;}
+.cat-chevron{font-size:11px;color:var(--text3);cursor:pointer;flex-shrink:0;padding:0 2px;line-height:1;user-select:none;}
+.cat-chevron:hover{color:var(--text);}
 
 /* ── COLOR PALETTE ── */
 .color-palette{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}
@@ -435,7 +437,11 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 .acc-settings-row.drag-over td{background:var(--green-l) !important;}
 .dragging{opacity:.4;}
 
-.badge-withdrawal{background:#f0e8f5;color:#7A5A8A;}
+.badge-pending{background:var(--amber-l);color:var(--amber);border:1px solid #e8c870;}
+.tx-pending td{opacity:.6;}
+.tx-pending{background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(0,0,0,.015) 8px,rgba(0,0,0,.015) 16px) !important;}
+.tx-card.pending{opacity:.65;border-style:dashed;}
+.pending-chip{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.5px;background:var(--amber-l);color:var(--amber);font-family:'DM Mono',monospace;text-transform:uppercase;vertical-align:middle;margin-left:4px;}
 .badge-adjustment{background:var(--surface2);color:var(--text2);}
 .badge-debt_payment{background:#faeae7;color:#c8553d;border:1px solid #f5c6be;}
 .to-withdrawal{background:#f0e8f5;color:#7A5A8A;border-color:#7A5A8A;}
@@ -676,6 +682,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
       </div>
       <div class="filters">
         <input class="fsearch" id="txSearch" placeholder="Search…" oninput="renderTxPage()">
+        <select class="fsel" id="fStatus" onchange="renderTxPage()"><option value="">All</option><option value="confirmed">Confirmed</option><option value="pending">Pending</option></select>
         <select class="fsel" id="fType" onchange="renderTxPage()"><option value="">All types</option><option value="spend">Spend</option><option value="income">Income</option><option value="investment">Invest/Save</option><option value="debt_payment">Debt Payment</option><option value="transfer">Transfer</option><option value="withdrawal">Withdrawal</option><option value="adjustment">Adjustment</option></select>
         <select class="fsel" id="fCat" onchange="renderTxPage()"></select>
         <select class="fsel" id="fAcc" onchange="renderTxPage()"></select>
@@ -837,6 +844,7 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
         <div class="s-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
           Categories
           <div class="btn-row" style="gap:6px">
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="toggleAllCatGroups()">⊟ Collapse all</button>
             <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="exportCategories()">↓ Export CSV</button>
             <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="document.getElementById('importCatFile').click()">↑ Import CSV</button>
             <input type="file" id="importCatFile" accept=".csv" style="display:none" onchange="importCategories(this)"/>
@@ -866,8 +874,11 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
 
       <!-- RECURRING -->
       <div class="s-section">
-        <div class="s-title">Recurring transactions</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Manage recurring transactions on the dedicated <a href="#" onclick="goTo('recurring');closeModal && closeModal();return false;" style="color:var(--green);font-weight:500">Recurring page</a>.</p>
+        <div class="s-title" style="display:flex;justify-content:space-between;align-items:center">
+          Recurring transactions
+          <button class="btn btn-primary" style="font-size:12px;padding:5px 12px" onclick="openAddRecurring()">+ Add recurring</button>
+        </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Manage recurring transactions on the dedicated <a href="#" onclick="goTo('recurring');return false;" style="color:var(--green);font-weight:500">Recurring page</a>.</p>
         <div id="recurList"></div>
       </div>
 
@@ -918,19 +929,43 @@ code{font-family:'DM Mono',monospace;background:var(--surface2);padding:1px 5px;
     <!-- 5. NOTES -->
     <div class="fg"><label class="fl">Notes</label><textarea class="ft" id="txNotes" placeholder="Optional…" style="min-height:48px"></textarea></div>
 
-    <!-- 6. RECURRING -->
-    <div class="recur-row">
-      <label><input type="checkbox" id="txRecur" onchange="toggleRecur()"/> Recurring transaction</label>
-      <div id="recurFields" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;width:100%">
-        <select class="fs" id="txRecurFreq" style="flex:1">
-          <option value="daily">Daily</option><option value="weekly">Weekly</option>
-          <option value="fortnightly">Fortnightly</option><option value="monthly" selected>Monthly</option>
-          <option value="yearly">Yearly</option>
-        </select>
+    <!-- 6. PENDING HINT — shown automatically when future date is picked -->
+    <div id="txPendingHint" style="display:none;padding:8px 12px;background:var(--amber-l);border:1px solid var(--amber);border-radius:var(--rs);font-size:12px;color:var(--amber)">
+      📅 Future date selected — this transaction will be marked as <strong>pending</strong> until that date arrives.
+    </div>
+
+    <!-- 7. RECURRING TEMPLATE -->
+    <div class="recur-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <label style="font-size:13px;font-weight:500;display:flex;align-items:center;gap:7px;cursor:pointer">
+        <input type="checkbox" id="txCreateTemplate" onchange="toggleTemplateFields()"/>
+        Create recurring template
+      </label>
+      <div id="templateFields" style="display:none;width:100%;padding:10px 12px;background:var(--surface2);border-radius:var(--rs);border:1px solid var(--border)">
+        <div class="fg2" style="margin-bottom:8px">
+          <div class="fg" style="margin:0">
+            <label class="fl">Frequency</label>
+            <select class="fs" id="txTplFreq">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="fortnightly">Fortnightly</option>
+              <option value="monthly" selected>Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0" id="txTplDayRow">
+            <label class="fl">Day of month</label>
+            <input class="fi" id="txTplDay" type="number" min="1" max="31" placeholder="e.g. 25"/>
+          </div>
+        </div>
+        <label style="font-size:12px;display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--text2)">
+          <input type="checkbox" id="txTplLogNow" checked/>
+          Also log today's transaction (uncheck to only set up for future)
+        </label>
+        <div class="f-hint" style="margin-top:4px">Future occurrences will be added automatically on the due date.</div>
       </div>
     </div>
 
-    <!-- 7. TYPE OVERRIDE — secondary, at bottom -->
+    <!-- 8. TYPE OVERRIDE — secondary, at bottom -->
     <div class="fg" style="margin-top:8px">
       <label class="fl" style="color:var(--text3)">Transaction type <span style="font-weight:400">(auto-set by category — override if needed)</span></label>
       <div class="type-sel" style="grid-template-columns:repeat(3,1fr)">
@@ -1304,7 +1339,8 @@ let transactions  = [];
 let categories    = [];
 let accounts      = [];
 let budgets       = [];
-let profiles      = [];   // other household members
+let profiles      = [];
+let recurringTemplates = [];
 let currency      = localStorage.getItem(LS_CUR) || '$';
 let editingTxId   = null;
 let selTxType     = 'spend';
@@ -1378,25 +1414,25 @@ async function loadProfileAndHousehold() {
 // ═══════════════════════════════════════════════════════════════
 async function loadAllData() {
   const hhId = household.id;
-  const [txRes, catRes, accRes, budRes, profRes, setRes] = await Promise.all([
+  const [txRes, catRes, accRes, budRes, profRes, setRes, tplRes] = await Promise.all([
     sb.from('transactions').select('*').eq('household_id', hhId).order('date', { ascending: false }).order('created_at', { ascending: false }),
     sb.from('categories').select('*').eq('household_id', hhId).order('sort_order').order('name'),
     sb.from('accounts').select('*').eq('household_id', hhId).order('name'),
     sb.from('budgets').select('*').eq('household_id', hhId),
     sb.from('profiles').select('*').eq('household_id', hhId),
-    sb.from('household_settings').select('*').eq('household_id', hhId).maybeSingle()
+    sb.from('household_settings').select('*').eq('household_id', hhId).maybeSingle(),
+    sb.from('recurring_templates').select('*').eq('household_id', hhId).eq('is_active', true).order('created_at'),
   ]);
-  // Log any errors but don't crash — partial data is better than nothing
-  [txRes,catRes,accRes,budRes,profRes,setRes].forEach((r,i) => {
+  [txRes,catRes,accRes,budRes,profRes,setRes,tplRes].forEach((r,i) => {
     if (r.error) console.warn('loadAllData query', i, 'error:', r.error.message);
   });
-  if (txRes.data)  transactions = txRes.data;
-  if (catRes.data) categories   = catRes.data;
-  if (accRes.data) accounts     = accRes.data;
-  if (budRes.data) budgets       = budRes.data;
-  if (profRes.data) profiles     = profRes.data;
+  if (txRes.data)  transactions        = txRes.data;
+  if (catRes.data) categories          = catRes.data;
+  if (accRes.data) accounts            = accRes.data;
+  if (budRes.data) budgets             = budRes.data;
+  if (profRes.data) profiles           = profRes.data;
   if (setRes.data) { householdSettings = setRes.data; applyTheme(setRes.data.theme); }
-  // Load column preferences from THIS user's profile (not first in array)
+  if (tplRes.data) recurringTemplates  = tplRes.data;
   const myProf = (profRes.data||[]).find(p => p.id === currentUser.id);
   if (myProf?.preferences?.columns) visibleCols = myProf.preferences.columns;
 }
@@ -1818,47 +1854,6 @@ async function saveSalaryDay() {
 // ═══════════════════════════════════════════════════════════════
 // EOM / SALARY CYCLE PROJECTIONS
 // ═══════════════════════════════════════════════════════════════
-function getExpectedPaymentsToDate(endDateStr) {
-  const today = new Date().toISOString().split('T')[0];
-  const recurring = transactions.filter(t => t.is_recurring);
-  let total = 0, items = [];
-  recurring.forEach(tmpl => {
-    if (tmpl.type === 'income') return; // only outflows
-    let checkDate = nextDueDate(tmpl.recur_freq, tmpl.date);
-    let safetyBreak = 0;
-    while (checkDate && checkDate > today && checkDate <= endDateStr && safetyBreak++ < 60) {
-      const alreadyLogged = transactions.some(t =>
-        !t.is_recurring && t.description === tmpl.description &&
-        t.account_id === tmpl.account_id && t.date === checkDate
-      );
-      if (!alreadyLogged) {
-        total += Number(tmpl.amount);
-        items.push({ desc: tmpl.description, amt: Number(tmpl.amount), date: checkDate, type: tmpl.type });
-      }
-      checkDate = nextDueDate(tmpl.recur_freq, checkDate);
-    }
-  });
-  return { total, items };
-}
-
-function getExpectedIncomeToDate(endDateStr) {
-  const today = new Date().toISOString().split('T')[0];
-  const recurring = transactions.filter(t => t.is_recurring && t.type === 'income');
-  let total = 0;
-  recurring.forEach(tmpl => {
-    let checkDate = nextDueDate(tmpl.recur_freq, tmpl.date);
-    let safetyBreak = 0;
-    while (checkDate && checkDate > today && checkDate <= endDateStr && safetyBreak++ < 60) {
-      const alreadyLogged = transactions.some(t =>
-        !t.is_recurring && t.description === tmpl.description && t.date === checkDate
-      );
-      if (!alreadyLogged) total += Number(tmpl.amount);
-      checkDate = nextDueDate(tmpl.recur_freq, checkDate);
-    }
-  });
-  return total;
-}
-
 // ═══════════════════════════════════════════════════════════════
 // INVESTMENT RETURN CALCULATION
 // ═══════════════════════════════════════════════════════════════
@@ -1891,6 +1886,19 @@ function calcInvestmentReturn(accId) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// EFFECTIVE TRANSACTION HELPER
+// A transaction "counts" in balances/stats if it is confirmed,
+// OR if it is pending but its date has already passed (auto-confirms)
+// ═══════════════════════════════════════════════════════════════
+const todayDateStr = () => new Date().toISOString().split('T')[0];
+
+function isEffective(t) {
+  if (t.status === 'confirmed' || !t.status) return true;
+  // pending but date has arrived → treat as confirmed
+  return t.date <= todayDateStr();
+}
+
+// ═══════════════════════════════════════════════════════════════
 // STATS — updated with all new tiles
 // ═══════════════════════════════════════════════════════════════
 // Account type groups
@@ -1904,7 +1912,7 @@ function renderStats() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const monthly = transactions.filter(t => {
-    return t.date >= period.start && t.date <= period.end;
+    return t.date >= period.start && t.date <= period.end && isEffective(t);
   });
 
   const income  = monthly.filter(t=>t.type==='income'||t.type==='withdrawal').reduce((a,t)=>a+Number(t.amount),0);
@@ -2022,7 +2030,7 @@ function setBalanceDate(asOfToday) {
 function renderRecent() {
   const body = document.getElementById('recentBody');
   if (!body) return;
-  body.innerHTML = transactions.slice(0,7).map(t => {
+  body.innerHTML = transactions.filter(t => isEffective(t)).slice(0,7).map(t => {
     const cat = categories.find(c=>c.id===t.category_id);
     const isMove = t.type==='transfer'||t.type==='withdrawal';
     const acc = isMove
@@ -2049,6 +2057,7 @@ function renderRecent() {
 // ═══════════════════════════════════════════════════════════════
 function renderTxPage() {
   const search = (document.getElementById('txSearch')?.value||'').toLowerCase();
+  const status = document.getElementById('fStatus')?.value||'';
   const type   = document.getElementById('fType')?.value||'';
   const cat    = document.getElementById('fCat')?.value||'';
   const acc    = document.getElementById('fAcc')?.value||'';
@@ -2057,6 +2066,10 @@ function renderTxPage() {
 
   let txs = [...transactions];
   if (search) txs = txs.filter(t => (t.description+' '+(t.notes||'')).toLowerCase().includes(search));
+  if (status) {
+    if (status === 'pending')   txs = txs.filter(t => t.status==='pending' && !isEffective(t));
+    if (status === 'confirmed') txs = txs.filter(t => isEffective(t));
+  }
   if (type)   txs = txs.filter(t => t.type===type);
   if (cat)    txs = txs.filter(t => t.category_id===cat);
   if (acc)    txs = txs.filter(t => t.account_id===acc || t.to_account_id===acc);
@@ -2131,30 +2144,37 @@ function renderTxPage() {
 function txRow(t, cols, runBal) {
   if (!Array.isArray(cols)) { cols = getVisibleCols(); runBal = {}; }
 
-  const cat      = categories.find(c=>c.id===t.category_id);
-  const parent   = cat?.parent_id ? categories.find(c=>c.id===cat.parent_id) : null;
-  const group    = parent || (cat && !cat.parent_id ? cat : null);
-  const catLabel = parent ? cat.icon+' '+cat.name : (cat ? cat.icon+' '+cat.name : '—');
+  const isPending  = t.status === 'pending' && !isEffective(t);
+  const cat        = categories.find(c=>c.id===t.category_id);
+  const parent     = cat?.parent_id ? categories.find(c=>c.id===cat.parent_id) : null;
+  const group      = parent || (cat && !cat.parent_id ? cat : null);
+  const catLabel   = parent ? cat.icon+' '+cat.name : (cat ? cat.icon+' '+cat.name : '—');
   const groupLabel = group ? (group.icon||'')+'  '+group.name : '—';
-  const nature   = cat?.nature || parent?.nature || '';
-  const spendType= cat?.cat_type || parent?.cat_type || '';
+  const nature     = cat?.nature || parent?.nature || '';
+  const spendType  = cat?.cat_type || parent?.cat_type || '';
 
-  const isTransfer   = t.type==='transfer';
-  const isWithdrawal = t.type==='withdrawal';
-  const accName  = (isTransfer||isWithdrawal)
+  const isTransfer    = t.type==='transfer';
+  const isWithdrawal  = t.type==='withdrawal';
+  const isDebtPay     = t.type==='debt_payment';
+  const isMovement    = isTransfer || isWithdrawal;
+  const accName  = (isMovement || isDebtPay)
     ? (accounts.find(a=>a.id===t.account_id)?.name||'?') + ' → ' + (accounts.find(a=>a.id===t.to_account_id)?.name||'?')
     : accounts.find(a=>a.id===t.account_id)?.name || '—';
 
-  const isIncome  = t.type==='income';
+  const isIncome  = t.type==='income' || t.type==='withdrawal';
   const isAdjust  = t.type==='adjustment';
-  const isNeutral = isTransfer||isWithdrawal;
-  const signedAmt = isIncome||isAdjust ? parseFloat(t.amount)||0 : -(parseFloat(t.amount)||0);
+  const isNeutral = isTransfer;
   const amtCls    = isIncome?'amt-pos':isNeutral?'amt-neu':'amt-neg';
   const amtSign   = isIncome?'+':isNeutral?'±':'-';
+  const typeLabel = t.type==='investment'?'invest/save':t.type==='debt_payment'?'debt pmt':t.type;
 
-  const who       = profiles.find(p=>p.id===t.user_id)?.display_name || '—';
-  const whoColor  = t.user_id===currentUser?.id?'var(--green)':'var(--blue)';
-  const typeLabel = t.type==='investment'?'invest/save':t.type;
+  const who      = profiles.find(p=>p.id===t.user_id)?.display_name || '—';
+  const whoColor = t.user_id===currentUser?.id?'var(--green)':'var(--blue)';
+
+  // Recurring column: show frequency from template or direct field, or — for non-recurring
+  const recurCell = t.recur_freq
+    ? `<span class="badge badge-recurring" title="Auto-logged from recurring template">↻ ${t.recur_freq}</span>`
+    : '<span style="color:var(--text3)">—</span>';
 
   let runBalCell = '';
   if (cols.includes('running_bal') && runBal) {
@@ -2165,20 +2185,19 @@ function txRow(t, cols, runBal) {
       : '<td></td>';
   }
 
-  return `<tr data-txid="${t.id}" class="${selectedTxIds.has(t.id)?'tx-selected':''}">
+  const pendingBadge = isPending ? `<span class="pending-chip">pending</span>` : '';
+  const rowCls = [selectedTxIds.has(t.id)?'tx-selected':'', isPending?'tx-pending':''].filter(Boolean).join(' ');
+
+  return `<tr data-txid="${t.id}" class="${rowCls}">
     <td class="bulk-check"><input type="checkbox" class="tx-bulk-cb bulk-cb" data-id="${t.id}" ${selectedTxIds.has(t.id)?'checked':''} onchange="toggleBulkSelect('${t.id}',this.checked)"/></td>
-    ${cols.includes('date')         ? `<td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}</td>` : ''}
+    ${cols.includes('date')         ? `<td style="color:var(--text3);font-size:11px;font-family:'DM Mono',monospace;white-space:nowrap">${fmtDate(t.date)}${pendingBadge}</td>` : ''}
     ${cols.includes('description')  ? `<td style="font-weight:500">${esc(t.description)}</td>` : ''}
     ${cols.includes('parent_group') ? `<td style="font-size:12px;color:var(--text2)">${esc(groupLabel)}</td>` : ''}
     ${cols.includes('category')     ? `<td style="font-size:12px;color:var(--text2)">${esc(catLabel)}</td>` : ''}
     ${cols.includes('nature')       ? `<td style="font-size:11px;color:var(--text3)">${esc(nature)}</td>` : ''}
     ${cols.includes('spending_type')? `<td style="font-size:11px;color:var(--text3)">${esc(spendType)}</td>` : ''}
     ${cols.includes('type')         ? `<td><span class="badge badge-${t.type}">${esc(typeLabel)}</span></td>` : ''}
-    ${cols.includes('recurring')    ? `<td style="text-align:center;font-size:12px">${
-        t.is_recurring ? '<span title="Recurring template" style="color:var(--amber)">⚙ template</span>'
-      : t.recur_freq   ? `<span title="Auto-logged from recurring" class="badge badge-recurring">↻ ${t.recur_freq}</span>`
-      : '—'
-    }</td>` : ''}
+    ${cols.includes('recurring')    ? `<td style="font-size:11px">${recurCell}</td>` : ''}
     ${cols.includes('recur_freq')   ? `<td style="font-size:11px;color:var(--text3)">${t.recur_freq||'—'}</td>` : ''}
     ${cols.includes('account')      ? `<td style="font-size:12px;color:var(--text2)">${esc(accName)}</td>` : ''}
     ${cols.includes('person')       ? `<td style="font-size:12px;font-weight:500;color:${whoColor}">${esc(who)}</td>` : ''}
@@ -2186,6 +2205,7 @@ function txRow(t, cols, runBal) {
     ${runBalCell}
     <td style="text-align:right"><span class="${amtCls}">${amtSign}${currency}${fmt(t.amount)}</span></td>
     <td style="white-space:nowrap">
+      ${isPending ? `<button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;color:var(--green)" onclick="confirmTx('${t.id}')">✓ confirm</button>` : ''}
       <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="editTx('${t.id}')">edit</button>
       <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteTx('${t.id}')">del</button>
     </td>
@@ -2343,22 +2363,34 @@ function openAddTx(prefill) {
   editingTxId = null;
   set('txModalTitle', 'Add Transaction');
   document.getElementById('txAmt').value   = prefill?.amount || '';
-  document.getElementById('txDesc').value  = prefill?.desc   || '';
-  document.getElementById('txNotes').value = '';
-  document.getElementById('txDate').value  = new Date().toISOString().split('T')[0];
-  document.getElementById('txRecur').checked = false;
-  toggleRecur();
+  document.getElementById('txDesc').value  = prefill?.desc   || prefill?.description || '';
+  document.getElementById('txNotes').value = prefill?.notes  || '';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('txDate').value  = prefill?.date || today;
+
+  // Reset template fields
+  const tplCb = document.getElementById('txCreateTemplate');
+  if (tplCb) { tplCb.checked = false; toggleTemplateFields(); }
+  const pendingHint = document.getElementById('txPendingHint');
+  if (pendingHint) pendingHint.style.display = 'none';
+
+  // Wire date change to show pending hint
+  const dateEl = document.getElementById('txDate');
+  if (dateEl) {
+    dateEl.oninput = () => {
+      const ph = document.getElementById('txPendingHint');
+      if (ph) ph.style.display = dateEl.value > today ? 'block' : 'none';
+    };
+  }
+
   selType(prefill?.type || 'spend');
   populateTxDropdowns();
 
-  // Restore last used account
   const lastAcc = localStorage.getItem('pocket_last_acc');
   if (lastAcc && !prefill?.account_id) {
     const accEl = document.getElementById('txAcc');
     if (accEl && accounts.find(a=>a.id===lastAcc)) accEl.value = lastAcc;
   }
-
-  // Pre-fill from template if provided
   if (prefill?.category_id) {
     const catEl = document.getElementById('txCat');
     if (catEl) catEl.value = prefill.category_id;
@@ -2369,12 +2401,9 @@ function openAddTx(prefill) {
     if (accEl) accEl.value = prefill.account_id;
   }
 
-  // Show or hide quick-add strip
   renderQAStrip();
   const strip = document.getElementById('qaStrip');
   if (strip) strip.style.display = prefill ? 'none' : 'block';
-
-  // Show template button on new tx
   const tBtn = document.getElementById('txTemplateBtn');
   if (tBtn) tBtn.style.display = '';
 
@@ -2493,11 +2522,29 @@ async function saveTx() {
 
   if (!isMovement && !isDebtPayment) localStorage.setItem('pocket_last_acc', accId);
 
-  const isRecur = document.getElementById('txRecur').checked;
+  const txDate    = document.getElementById('txDate').value;
+  const todayStr  = new Date().toISOString().split('T')[0];
+  const isPending = txDate > todayStr;
+
+  // Recurring template creation
+  const createTpl = document.getElementById('txCreateTemplate')?.checked;
+  const logNow    = createTpl ? (document.getElementById('txTplLogNow')?.checked ?? true) : true;
+
+  // If creating template only (not logging now), skip transaction insert
+  if (createTpl && !logNow && !editingTxId) {
+    setLoading('txSaveBtn', true);
+    await saveRecurringTemplate({ desc, amount, accId, toAccId, catId: document.getElementById('txCat')?.value||null, notes: document.getElementById('txNotes').value.trim()||null });
+    setLoading('txSaveBtn', false);
+    closeModal('txModal');
+    renderAll();
+    toast('Recurring template created ✓', 'ok');
+    return;
+  }
+
   const tx = {
     household_id:  household.id,
     user_id:       currentUser.id,
-    date:          document.getElementById('txDate').value,
+    date:          txDate,
     description:   desc,
     amount:        Math.abs(amount),
     type:          selTxType,
@@ -2505,13 +2552,13 @@ async function saveTx() {
     account_id:    accId   || null,
     to_account_id: toAccId || null,
     notes:         document.getElementById('txNotes').value.trim() || null,
-    is_recurring:  isRecur,
-    recur_freq:    isRecur ? document.getElementById('txRecurFreq').value : null,
-    recur_until:   null,
+    is_recurring:  false,
+    recur_freq:    null,
+    status:        isPending ? 'pending' : 'confirmed',
   };
 
   setLoading('txSaveBtn', true);
-  let error;
+  let error, newTx;
   if (editingTxId) {
     ({ error } = await sb.from('transactions').update(tx).eq('id', editingTxId));
     if (!error) {
@@ -2522,16 +2569,30 @@ async function saveTx() {
     const { data, error: err } = await sb.from('transactions').insert(tx).select().single();
     error = err;
     if (!error && data) {
+      newTx = data;
       recentlyInserted.add(data.id);
       setTimeout(() => recentlyInserted.delete(data.id), 5000);
       transactions.unshift(data);
     }
   }
+
+  // Also create recurring template if requested
+  if (!error && createTpl && !editingTxId) {
+    const tpl = await saveRecurringTemplate({ desc, amount, accId, toAccId, catId: tx.category_id, notes: tx.notes, templateId: null });
+    // Stamp the transaction with template id
+    if (tpl?.id && newTx?.id) {
+      await sb.from('transactions').update({ recurring_template_id: tpl.id, recur_freq: tpl.frequency }).eq('id', newTx.id);
+      const i = transactions.findIndex(t=>t.id===newTx.id);
+      if (i>=0) { transactions[i].recurring_template_id = tpl.id; transactions[i].recur_freq = tpl.frequency; }
+    }
+  }
+
   setLoading('txSaveBtn', false);
   if (error) { toast('Error: ' + error.message, 'err'); return; }
   closeModal('txModal');
   renderAll();
-  toast(editingTxId ? 'Updated ✓' : 'Saved ✓', 'ok');
+  const msg = editingTxId ? 'Updated ✓' : isPending ? 'Saved as pending ✓' : createTpl ? 'Saved + template created ✓' : 'Saved ✓';
+  toast(msg, 'ok');
 }
 
 async function deleteTx(id) {
@@ -3111,22 +3172,60 @@ function pickThemeColor(key, color, el) {
 // ═══════════════════════════════════════════════════════════════
 // CATEGORY MANAGER
 // ═══════════════════════════════════════════════════════════════
+// Track which groups are collapsed (persists within session)
+const collapsedCatGroups = new Set();
+
+function toggleAllCatGroups() {
+  const roots = categories.filter(c=>!c.parent_id);
+  const anyExpanded = roots.some(r => !collapsedCatGroups.has(r.id));
+  roots.forEach(r => anyExpanded ? collapsedCatGroups.add(r.id) : collapsedCatGroups.delete(r.id));
+  renderCatTree();
+}
+
+function toggleCatGroup(id) {
+  if (collapsedCatGroups.has(id)) collapsedCatGroups.delete(id);
+  else collapsedCatGroups.add(id);
+  renderCatTree();
+}
+
 function renderCatTree() {
   const el = document.getElementById('catTree');
   if (!el) return;
-  // Sort roots by sort_order then name
-  const roots = categories.filter(c => !c.parent_id).sort((a,b) => (a.sort_order??999) - (b.sort_order??999) || a.name.localeCompare(b.name));
-  const children = (parentId) => categories.filter(c => c.parent_id === parentId).sort((a,b) => (a.sort_order??999) - (b.sort_order??999) || a.name.localeCompare(b.name));
+  const roots    = categories.filter(c => !c.parent_id).sort((a,b) => (a.sort_order??999)-(b.sort_order??999) || a.name.localeCompare(b.name));
+  const children = (parentId) => categories.filter(c => c.parent_id===parentId).sort((a,b) => (a.sort_order??999)-(b.sort_order??999) || a.name.localeCompare(b.name));
 
-  if (!roots.length) {
-    el.innerHTML = '<div class="empty">No categories yet — add your first one</div>';
-    return;
-  }
+  if (!roots.length) { el.innerHTML='<div class="empty">No categories yet — add your first one</div>'; return; }
 
-  el.innerHTML = roots.map((root, ri) => {
-    const kids = children(root.id);
-    const bulkCb = catBulkMode ? `<input type="checkbox" class="cat-bulk-cb" data-id="${root.id}" onchange="toggleCatSelect('${root.id}',this.checked)" style="margin-right:6px;flex-shrink:0"/>` : '';
-    const handle = !catBulkMode ? `<span class="drag-handle" draggable="false" title="Drag to reorder">⠿</span>` : '';
+  el.innerHTML = roots.map(root => {
+    const kids      = children(root.id);
+    const collapsed = collapsedCatGroups.has(root.id);
+    const bulkCb    = catBulkMode ? `<input type="checkbox" class="cat-bulk-cb" data-id="${root.id}" onchange="toggleCatSelect('${root.id}',this.checked)" style="margin-right:6px;flex-shrink:0"/>` : '';
+    const handle    = !catBulkMode ? `<span class="drag-handle" title="Drag to reorder groups">⠿</span>` : '';
+    const chevron   = kids.length
+      ? `<span class="cat-chevron" onclick="event.stopPropagation();toggleCatGroup('${root.id}')" title="${collapsed?'Expand':'Collapse'}">${collapsed?'▸':'▾'}</span>`
+      : '';
+
+    const childrenHtml = kids.map(kid => {
+      const kidBulkCb = catBulkMode ? `<input type="checkbox" class="cat-bulk-cb" data-id="${kid.id}" onchange="toggleCatSelect('${kid.id}',this.checked)" style="margin-right:6px;flex-shrink:0"/>` : '';
+      const kidHandle = !catBulkMode ? `<span class="drag-handle" title="Drag to reorder">⠿</span>` : '';
+      return `<div class="cat-child" data-id="${kid.id}" data-parent="${root.id}"
+          draggable="${!catBulkMode}"
+          ondragstart="event.stopPropagation();catDragStart(event,'${kid.id}','${root.id}')"
+          ondragover="event.stopPropagation();event.preventDefault();catDragOver(event,this)"
+          ondragleave="event.stopPropagation();catDragLeave(this)"
+          ondrop="event.stopPropagation();catDrop(event,'${kid.id}','${root.id}')">
+        ${kidHandle}${kidBulkCb}
+        <div class="cat-child-icon">${kid.icon||'📦'}</div>
+        <div class="cat-color-dot" style="background:${kid.color||root.color||'#6aa84f'}"></div>
+        <div class="cat-child-label">${esc(kid.name)}</div>
+        <div class="cat-child-meta">${kid.nature||''} · ${kid.cat_type||''}</div>
+        <div class="cat-child-actions">
+          <button class="btn btn-ghost" style="padding:2px 7px;font-size:11px" onclick="editCat('${kid.id}')">edit</button>
+          <button class="btn btn-danger" style="padding:2px 7px;font-size:11px" onclick="deleteCat('${kid.id}')">del</button>
+        </div>
+      </div>`;
+    }).join('');
+
     return `<div class="cat-group" data-id="${root.id}" data-parent=""
         draggable="${!catBulkMode}"
         ondragstart="catDragStart(event,'${root.id}','')"
@@ -3135,36 +3234,19 @@ function renderCatTree() {
         ondrop="catDrop(event,'${root.id}','')">
       <div class="cat-group-header">
         ${handle}${bulkCb}
+        ${chevron}
         <div class="cat-group-icon">${root.icon||'📦'}</div>
         <div class="cat-color-dot" style="background:${root.color||'#6aa84f'}"></div>
         <div class="cat-group-label">${esc(root.name)}</div>
         <div class="cat-group-meta">${root.nature||''} · ${root.cat_type||''}</div>
+        ${kids.length ? `<span style="font-size:10px;color:var(--text3);margin-left:auto;margin-right:6px">${kids.length} sub</span>` : ''}
         <div class="cat-group-actions">
           <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="editCat('${root.id}')">edit</button>
           <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteCat('${root.id}')">del</button>
           <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="addSubcat('${root.id}')">+ sub</button>
         </div>
       </div>
-      ${kids.length ? `<div class="cat-children">${kids.map((kid, ki) => {
-        const kidBulkCb = catBulkMode ? `<input type="checkbox" class="cat-bulk-cb" data-id="${kid.id}" onchange="toggleCatSelect('${kid.id}',this.checked)" style="margin-right:6px;flex-shrink:0"/>` : '';
-        const kidHandle = !catBulkMode ? `<span class="drag-handle" title="Drag to reorder">⠿</span>` : '';
-        return `<div class="cat-child" data-id="${kid.id}" data-parent="${root.id}"
-            draggable="${!catBulkMode}"
-            ondragstart="catDragStart(event,'${kid.id}','${root.id}')"
-            ondragover="catDragOver(event,this)"
-            ondragleave="catDragLeave(this)"
-            ondrop="catDrop(event,'${kid.id}','${root.id}')">
-          ${kidHandle}${kidBulkCb}
-          <div class="cat-child-icon">${kid.icon||'📦'}</div>
-          <div class="cat-color-dot" style="background:${kid.color||root.color||'#6aa84f'}"></div>
-          <div class="cat-child-label">${esc(kid.name)}</div>
-          <div class="cat-child-meta">${kid.nature||''} · ${kid.cat_type||''}</div>
-          <div class="cat-child-actions">
-            <button class="btn btn-ghost" style="padding:2px 7px;font-size:11px" onclick="editCat('${kid.id}')">edit</button>
-            <button class="btn btn-danger" style="padding:2px 7px;font-size:11px" onclick="deleteCat('${kid.id}')">del</button>
-          </div>
-        </div>`;
-      }).join('')}</div>` : ''}
+      ${kids.length && !collapsed ? `<div class="cat-children">${childrenHtml}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -3437,9 +3519,12 @@ function calcBalance(accId, upToDate) {
   const acc    = accounts.find(a=>a.id===accId);
   const isLoan = acc?.type === 'loan';
   let bal = parseFloat(acc?.opening_balance) || 0;
-  const todayStr = new Date().toISOString().split('T')[0];
-  const cutoff   = upToDate || (balanceAsOfToday ? todayStr : null);
-  const txs      = cutoff ? transactions.filter(t => t.date <= cutoff) : transactions;
+  const cutoff = upToDate || null;
+  const txs = transactions.filter(t => {
+    if (!isEffective(t)) return false;
+    if (cutoff) return t.date <= cutoff;
+    return true;
+  });
   txs.forEach(t => {
     const amt = parseFloat(t.amount) || 0;
     if (t.type === 'adjustment' && t.account_id === accId) { bal += amt; return; }
@@ -4525,54 +4610,84 @@ document.addEventListener('keydown', e => {
 // AUTO-LOG RECURRING TRANSACTIONS
 // ═══════════════════════════════════════════════════════════════
 async function processRecurringDue() {
-  const templates = transactions.filter(t => t.is_recurring);
-  if (!templates.length) return;
-  const today    = new Date(); today.setHours(0,0,0,0);
-  const todayStr = today.toISOString().split('T')[0];
+  if (!recurringTemplates.length) return;
+  const todayStr = new Date().toISOString().split('T')[0];
   const toInsert = [];
 
-  for (const tmpl of templates) {
-    // Find most recent auto-logged instance
-    const instances = transactions.filter(t =>
-      t.id !== tmpl.id && t.description === tmpl.description &&
-      t.account_id === tmpl.account_id && t.type === tmpl.type && !t.is_recurring
-    ).sort((a,b) => b.date.localeCompare(a.date));
-    const lastDate = instances[0]?.date || tmpl.date;
-    const nextDue  = nextDueDate(tmpl.recur_freq, lastDate);
-    if (!nextDue || nextDue > todayStr) continue;
-    // Dedup check
-    const exists = transactions.some(t =>
-      t.id !== tmpl.id && t.description === tmpl.description &&
-      t.account_id === tmpl.account_id && t.type === tmpl.type && t.date === nextDue
-    );
-    if (exists) continue;
-    toInsert.push({
-      household_id: household.id, user_id: tmpl.user_id,
-      date: nextDue, description: tmpl.description, amount: tmpl.amount,
-      type: tmpl.type, category_id: tmpl.category_id,
-      account_id: tmpl.account_id, to_account_id: tmpl.to_account_id,
-      notes: tmpl.notes, is_recurring: false,
-      recur_freq: tmpl.recur_freq,  // marks this as auto-logged from a recurring template
-    });
+  for (const tmpl of recurringTemplates) {
+    if (!tmpl.is_active) continue;
+    // Build all due dates from start_date up to today
+    let checkDate = tmpl.start_date;
+    // Advance to first occurrence on/after start_date using day_of_month if set
+    if (tmpl.day_of_month && tmpl.frequency === 'monthly') {
+      const sd = new Date(tmpl.start_date + 'T00:00:00');
+      checkDate = `${sd.getFullYear()}-${String(sd.getMonth()+1).padStart(2,'0')}-${String(Math.min(tmpl.day_of_month, daysInMonth(sd.getFullYear(), sd.getMonth()))).padStart(2,'0')}`;
+      if (checkDate < tmpl.start_date) checkDate = nextDueDate(tmpl.frequency, checkDate, tmpl.day_of_month);
+    }
+    let safetyBreak = 0;
+    while (checkDate && checkDate <= todayStr && safetyBreak++ < 120) {
+      // Check if already logged for this template on this date
+      const exists = transactions.some(t =>
+        t.recurring_template_id === tmpl.id && t.date === checkDate
+      );
+      if (!exists) {
+        toInsert.push({
+          household_id: household.id,
+          user_id: tmpl.user_id || currentUser.id,
+          date: checkDate,
+          description: tmpl.description,
+          amount: tmpl.amount,
+          type: tmpl.type,
+          category_id: tmpl.category_id,
+          account_id: tmpl.account_id,
+          to_account_id: tmpl.to_account_id,
+          notes: tmpl.notes,
+          status: 'confirmed',
+          recurring_template_id: tmpl.id,
+          recur_freq: tmpl.frequency,  // stamp for display/export
+          is_recurring: false,
+        });
+      }
+      checkDate = nextDueDate(tmpl.frequency, checkDate, tmpl.day_of_month);
+    }
   }
+
   if (!toInsert.length) return;
   const { data, error } = await sb.from('transactions').insert(toInsert).select();
   if (error) { console.warn('Auto-log recurring error:', error); return; }
   if (data) {
-    data.forEach(t => transactions.unshift(t));
+    data.forEach(t => { recentlyInserted.add(t.id); setTimeout(()=>recentlyInserted.delete(t.id),5000); transactions.unshift(t); });
     toast(`↻ ${data.length} recurring transaction${data.length>1?'s':''} auto-logged`, 'ok');
   }
 }
 
-function nextDueDate(freq, fromDateStr) {
+function daysInMonth(year, month) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function nextDueDate(freq, fromDateStr, dayOfMonth) {
   if (!freq || !fromDateStr) return null;
   const d = new Date(fromDateStr + 'T00:00:00');
   switch (freq) {
     case 'daily':       d.setDate(d.getDate() + 1); break;
     case 'weekly':      d.setDate(d.getDate() + 7); break;
     case 'fortnightly': d.setDate(d.getDate() + 14); break;
-    case 'monthly':     d.setMonth(d.getMonth() + 1); break;
-    case 'yearly':      d.setFullYear(d.getFullYear() + 1); break;
+    case 'monthly': {
+      d.setMonth(d.getMonth() + 1);
+      if (dayOfMonth) {
+        const maxDay = daysInMonth(d.getFullYear(), d.getMonth());
+        d.setDate(Math.min(dayOfMonth, maxDay));
+      }
+      break;
+    }
+    case 'yearly': {
+      d.setFullYear(d.getFullYear() + 1);
+      if (dayOfMonth) {
+        const maxDay = daysInMonth(d.getFullYear(), d.getMonth());
+        d.setDate(Math.min(dayOfMonth, maxDay));
+      }
+      break;
+    }
     default: return null;
   }
   return d.toISOString().split('T')[0];
@@ -4745,92 +4860,6 @@ async function deleteEditingTx() {
 // ═══════════════════════════════════════════════════════════════
 // RECURRING PAGE
 // ═══════════════════════════════════════════════════════════════
-function renderRecurPage() {
-  const el = document.getElementById('recurPageContent'); if (!el) return;
-  const recurring = transactions.filter(t=>t.is_recurring);
-  const now = new Date();
-  const m = now.getMonth(), y = now.getFullYear();
-
-  set('recurPageSub', recurring.length + ' scheduled transaction' + (recurring.length!==1?'s':''));
-
-  if (!recurring.length) {
-    el.innerHTML='<div class="card"><div class="empty">No recurring transactions yet — add a transaction and mark it as recurring.</div></div>';
-    const sc = document.getElementById('recurSummaryCard'); if(sc) sc.style.display='none';
-    return;
-  }
-
-  // Compute expected this month from recurring
-  let monthTotal = 0, dueCount = 0;
-  recurring.forEach(t => {
-    if (!freqMatchesMonth(t.recur_freq, t.date, m, y)) return;
-    monthTotal += Number(t.amount);
-    // Check if logged this cycle — look for non-recurring matching tx this month
-    const logged = transactions.some(x =>
-      !x.is_recurring && x.description === t.description &&
-      new Date(x.date+'T00:00:00').getMonth()===m && new Date(x.date+'T00:00:00').getFullYear()===y
-    );
-    if (!logged) dueCount++;
-  });
-
-  const sc = document.getElementById('recurSummaryCard');
-  if (sc) { sc.style.display=''; set('recurMonthTotal', currency+fmt(monthTotal)); set('recurDueCount', dueCount || '—'); }
-
-  el.innerHTML = `<div class="card" style="padding:0;overflow:hidden">
-    <table class="tbl">
-      <thead><tr>
-        <th>Description</th><th>Category</th><th>Account</th>
-        <th style="text-align:right">Amount</th><th>Frequency</th>
-        <th>This month</th><th></th>
-      </tr></thead>
-      <tbody>
-      ${recurring.map(t => {
-        const cat = categories.find(c=>c.id===t.category_id);
-        const acc = accounts.find(a=>a.id===t.account_id);
-        const cls = t.type==='income'?'amt-pos':'amt-neg';
-        const sgn = t.type==='income'?'+':'-';
-        const matches = freqMatchesMonth(t.recur_freq, t.date, m, y);
-        const logged  = matches && transactions.some(x =>
-          !x.is_recurring && x.description===t.description &&
-          new Date(x.date+'T00:00:00').getMonth()===m && new Date(x.date+'T00:00:00').getFullYear()===y
-        );
-        const status = !matches ? '' :
-          logged ? '<span class="recur-status logged">✓ logged</span>' :
-                   '<span class="recur-status due">due</span>';
-        return `<tr>
-          <td style="font-weight:500">${esc(t.description)}</td>
-          <td style="font-size:12px;color:var(--text2)">${cat?cat.icon+' '+cat.name:'—'}</td>
-          <td style="font-size:12px;color:var(--text2)">${acc?.name||'—'}</td>
-          <td style="text-align:right"><span class="${cls}">${sgn}${currency}${fmt(t.amount)}</span></td>
-          <td style="font-size:12px;color:var(--text2)">${t.recur_freq||'—'}</td>
-          <td>${status}</td>
-          <td style="white-space:nowrap">
-            <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="logRecurNow('${t.id}')">log now</button>
-            <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="editTx('${t.id}')">edit</button>
-          </td>
-        </tr>`;
-      }).join('')}
-      </tbody>
-    </table>
-  </div>`;
-}
-
-function freqMatchesMonth(freq, startDate, m, y) {
-  if (!freq || !startDate) return false;
-  const start = new Date(startDate+'T00:00:00');
-  if (freq==='monthly' || freq==='fortnightly') return true;
-  if (freq==='yearly') return start.getMonth()===m;
-  if (freq==='weekly' || freq==='daily') return true;
-  return true;
-}
-
-function logRecurNow(id) {
-  const t = transactions.find(x=>x.id===id);
-  if (!t) return;
-  openAddTx({ type:t.type, description:t.description, amount:t.amount,
-    category_id:t.category_id, account_id:t.account_id, notes:t.notes,
-    date: new Date().toISOString().split('T')[0] });
-}
-
 // ═══════════════════════════════════════════════════════════════
 // FORECAST PAGE
 // ═══════════════════════════════════════════════════════════════
@@ -5138,6 +5167,214 @@ function getSortedAccounts() {
     ...order.map(id => allActive.find(a=>a.id===id)).filter(Boolean),
     ...allActive.filter(a => !order.includes(a.id))
   ];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PENDING TRANSACTION HELPERS
+// ═══════════════════════════════════════════════════════════════
+async function confirmTx(id) {
+  const { error } = await sb.from('transactions').update({ status: 'confirmed' }).eq('id', id);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  const i = transactions.findIndex(t=>t.id===id);
+  if (i>=0) transactions[i].status = 'confirmed';
+  renderAll();
+  toast('Transaction confirmed ✓','ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEMPLATE FIELDS TOGGLE (in add tx modal)
+// ═══════════════════════════════════════════════════════════════
+function toggleTemplateFields() {
+  const cb = document.getElementById('txCreateTemplate');
+  const fields = document.getElementById('templateFields');
+  const dayRow = document.getElementById('txTplDayRow');
+  if (!fields) return;
+  fields.style.display = cb?.checked ? 'block' : 'none';
+  // Show day-of-month only for monthly/yearly
+  if (dayRow) {
+    const freq = document.getElementById('txTplFreq')?.value || 'monthly';
+    dayRow.style.display = ['monthly','yearly'].includes(freq) ? '' : 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RECURRING TEMPLATE CRUD
+// ═══════════════════════════════════════════════════════════════
+async function saveRecurringTemplate({ desc, amount, accId, toAccId, catId, notes }) {
+  const freq = document.getElementById('txTplFreq')?.value || 'monthly';
+  const day  = parseInt(document.getElementById('txTplDay')?.value) || null;
+  const payload = {
+    household_id:  household.id,
+    user_id:       currentUser.id,
+    description:   desc,
+    amount:        Math.abs(amount),
+    type:          selTxType,
+    category_id:   catId   || null,
+    account_id:    accId   || null,
+    to_account_id: toAccId || null,
+    notes:         notes   || null,
+    frequency:     freq,
+    day_of_month:  day,
+    start_date:    new Date().toISOString().split('T')[0],
+    is_active:     true,
+  };
+  const { data, error } = await sb.from('recurring_templates').insert(payload).select().single();
+  if (error) { console.error('Template insert error:', error); toast('Error creating template: '+error.message,'err'); return null; }
+  if (data) recurringTemplates.push(data);
+  renderRecurPage();
+  return data;
+}
+
+let editingTemplateId = null;
+
+function openAddTemplate() {
+  editingTemplateId = null;
+  openAddRecurring();
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Delete this recurring template? Existing transactions are not affected.')) return;
+  const { error } = await sb.from('recurring_templates').delete().eq('id', id);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  recurringTemplates = recurringTemplates.filter(t=>t.id!==id);
+  renderRecurPage();
+  toast('Template deleted — future auto-logging stopped','ok');
+}
+
+async function toggleTemplateActive(id) {
+  const tpl = recurringTemplates.find(t=>t.id===id);
+  if (!tpl) return;
+  const newActive = !tpl.is_active;
+  const { error } = await sb.from('recurring_templates').update({ is_active: newActive }).eq('id', id);
+  if (error) { toast('Error: '+error.message,'err'); return; }
+  tpl.is_active = newActive;
+  renderRecurPage();
+  toast(newActive ? 'Template resumed ✓' : 'Template paused ✓','ok');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RECURRING PAGE — updated to show templates
+// ═══════════════════════════════════════════════════════════════
+function renderRecurPage() {
+  const el = document.getElementById('recurPageContent'); if (!el) return;
+  const now = new Date();
+  const m = now.getMonth(), y = now.getFullYear();
+  const todayStr = now.toISOString().split('T')[0];
+
+  const activeTemplates = recurringTemplates.filter(t=>t.is_active);
+  const pausedTemplates = recurringTemplates.filter(t=>!t.is_active);
+
+  set('recurPageSub', recurringTemplates.length + ' template' + (recurringTemplates.length!==1?'s':''));
+
+  // Monthly total from active templates
+  let monthTotal = 0;
+  activeTemplates.forEach(t => {
+    if (t.type==='income') return;
+    if (freqMatchesMonth(t.frequency, t.start_date, m, y)) monthTotal += Number(t.amount);
+  });
+
+  // Due (not yet logged this cycle)
+  const dueCount = activeTemplates.filter(t => {
+    if (!freqMatchesMonth(t.frequency, t.start_date, m, y)) return false;
+    return !transactions.some(tx => tx.recurring_template_id===t.id && tx.date.startsWith(`${y}-${String(m+1).padStart(2,'0')}`));
+  }).length;
+
+  const sc = document.getElementById('recurSummaryCard');
+  if (sc) { sc.style.display=''; set('recurMonthTotal', currency+fmt(monthTotal)); set('recurDueCount', dueCount||'—'); }
+
+  const tplRow = (t) => {
+    const cat = categories.find(c=>c.id===t.category_id);
+    const acc = accounts.find(a=>a.id===t.account_id);
+    const cls = t.type==='income'?'amt-pos':'amt-neg';
+    const sgn = t.type==='income'?'+':'-';
+    const dayStr = t.day_of_month ? `(day ${t.day_of_month})` : '';
+    const nextDue = nextDueDate(t.frequency, t.start_date, t.day_of_month);
+    const logged  = transactions.some(tx => tx.recurring_template_id===t.id && tx.date.startsWith(`${y}-${String(m+1).padStart(2,'0')}`));
+    const status  = !freqMatchesMonth(t.frequency, t.start_date, m, y) ? '' :
+      logged ? '<span class="recur-status logged">✓ logged</span>' :
+               '<span class="recur-status due">due</span>';
+    return `<tr style="${!t.is_active?'opacity:.5':''}">
+      <td style="font-weight:500">${esc(t.description)}${!t.is_active?' <span style="font-size:10px;color:var(--text3)">(paused)</span>':''}</td>
+      <td style="font-size:12px;color:var(--text2)">${cat?cat.icon+' '+cat.name:'—'}</td>
+      <td style="font-size:12px;color:var(--text2)">${acc?.name||'—'}</td>
+      <td style="text-align:right"><span class="${cls}">${sgn}${currency}${fmt(t.amount)}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${t.frequency} ${dayStr}</td>
+      <td style="font-size:11px;color:var(--text3)">${nextDue||'—'}</td>
+      <td>${status}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="logRecurNow('${t.id}')">log now</button>
+        <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="toggleTemplateActive('${t.id}')">${t.is_active?'pause':'resume'}</button>
+        <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteTemplate('${t.id}')">del</button>
+      </td>
+    </tr>`;
+  };
+
+  if (!recurringTemplates.length) {
+    el.innerHTML='<div class="card"><div class="empty">No recurring templates yet. Click "+ Add recurring" to create one, or tick "Create recurring template" when adding a transaction.</div></div>';
+    return;
+  }
+
+  el.innerHTML = `<div class="card" style="padding:0;overflow:hidden">
+    <table class="tbl">
+      <thead><tr>
+        <th>Description</th><th>Category</th><th>Account</th>
+        <th style="text-align:right">Amount</th><th>Frequency</th>
+        <th>Next due</th><th>This month</th><th></th>
+      </tr></thead>
+      <tbody>${recurringTemplates.map(tplRow).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+// logRecurNow updated to use template
+function logRecurNow(templateId) {
+  const t = recurringTemplates.find(x=>x.id===templateId);
+  if (!t) return;
+  openAddTx({ type:t.type, description:t.description, amount:t.amount,
+    category_id:t.category_id, account_id:t.account_id,
+    to_account_id:t.to_account_id, notes:t.notes,
+    date: new Date().toISOString().split('T')[0] });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EOM PROJECTIONS — updated to use templates
+// ═══════════════════════════════════════════════════════════════
+function getExpectedPaymentsToDate(endDateStr) {
+  const today = new Date().toISOString().split('T')[0];
+  // Pending transactions
+  const pendingTotal = transactions
+    .filter(t => t.status==='pending' && t.date > today && t.date <= endDateStr && t.type!=='income' && t.type!=='withdrawal')
+    .reduce((s,t) => s+Number(t.amount), 0);
+  // Recurring templates not yet logged
+  let recurTotal = 0, items = [];
+  recurringTemplates.filter(t=>t.is_active && t.type!=='income').forEach(tmpl => {
+    let checkDate = nextDueDate(tmpl.frequency, tmpl.start_date, tmpl.day_of_month);
+    let safety = 0;
+    while (checkDate && checkDate > today && checkDate <= endDateStr && safety++ < 60) {
+      const logged = transactions.some(t => t.recurring_template_id===tmpl.id && t.date===checkDate);
+      if (!logged) { recurTotal += Number(tmpl.amount); items.push({ desc:tmpl.description, amt:Number(tmpl.amount), date:checkDate }); }
+      checkDate = nextDueDate(tmpl.frequency, checkDate, tmpl.day_of_month);
+    }
+  });
+  return { total: pendingTotal + recurTotal, items };
+}
+
+function getExpectedIncomeToDate(endDateStr) {
+  const today = new Date().toISOString().split('T')[0];
+  const pendingIncome = transactions
+    .filter(t => t.status==='pending' && t.date > today && t.date <= endDateStr && (t.type==='income'||t.type==='withdrawal'))
+    .reduce((s,t) => s+Number(t.amount), 0);
+  let recurIncome = 0;
+  recurringTemplates.filter(t=>t.is_active && (t.type==='income'||t.type==='withdrawal')).forEach(tmpl => {
+    let checkDate = nextDueDate(tmpl.frequency, tmpl.start_date, tmpl.day_of_month);
+    let safety = 0;
+    while (checkDate && checkDate > today && checkDate <= endDateStr && safety++ < 60) {
+      const logged = transactions.some(t => t.recurring_template_id===tmpl.id && t.date===checkDate);
+      if (!logged) recurIncome += Number(tmpl.amount);
+      checkDate = nextDueDate(tmpl.frequency, checkDate, tmpl.day_of_month);
+    }
+  });
+  return pendingIncome + recurIncome;
 }
 
 // ═══════════════════════════════════════════════════════════════
